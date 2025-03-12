@@ -9,6 +9,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 // Import Screens
 import HomeScreen from "../screens/HomeScreen";
 import SettingsScreen from "../screens/SettingsScreen";
+import { useTheme } from "react-native-paper";
 
 // Create Navigators
 const Tab = createBottomTabNavigator();
@@ -29,6 +30,8 @@ const HomeStack = () => {
 
 // Bottom Tab Navigator
 const Navigator = () => {
+  const theme = useTheme();
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -52,13 +55,13 @@ const Navigator = () => {
               );
             }
           },
-          tabBarStyle: { backgroundColor: '#F4D8CE' },
-          tabBarActiveTintColor: '#EF6351',
-          tabBarInactiveTintColor: 'gray',
-          headerStyle: { backgroundColor: '#F4D8CE' },
+          tabBarStyle: { backgroundColor: theme.colors.primary },
+          tabBarActiveTintColor: 'white',
+          tabBarInactiveTintColor: '#f9f7f5',
+          headerStyle: { backgroundColor: theme.colors.primary },
           headerTitleStyle: { fontFamily: "GothamRnd-Medium", fontSize: 20 },
           tabBarLabelStyle: { fontFamily: "GothamRnd-Medium", fontSize: 10 },
-          headerTintColor: '#000',
+          headerTintColor: 'white',
         })}
       >
         <Tab.Screen

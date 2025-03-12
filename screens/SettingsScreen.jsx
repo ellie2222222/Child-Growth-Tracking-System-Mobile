@@ -8,6 +8,7 @@ import Button from "../components/Button";
 
 const SettingsScreen = () => {
   const theme = useTheme();
+  console.log(theme)
   const [name, setName] = useState("John Doe");
   const [email, setEmail] = useState("john@example.com");
 

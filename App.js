@@ -32,6 +32,7 @@ export default function App() {
       light: { fontFamily: 'GothamRnd-Light', fontWeight: '300' },
       regular: { fontFamily: 'GothamRnd-Regular', fontWeight: '500' },
       medium: { fontFamily: 'GothamRnd-Medium', fontWeight: '600' },
+      titleMedium: { fontFamily: 'GothamRnd-Medium', fontWeight: '600' },
       bold: { fontFamily: 'GothamRnd-Bold', fontWeight: '700' },
       bodySmall: { fontFamily: 'GothamRnd-Medium', fontWeight: '400' },
       bodyMedium: { fontFamily: 'GothamRnd-Medium', fontWeight: '400' },
