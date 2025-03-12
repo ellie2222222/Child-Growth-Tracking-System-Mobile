@@ -10,6 +10,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import HomeScreen from "../screens/HomeScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { useTheme } from "react-native-paper";
+import ChildScreen from "../screens/ChildScreen";
 
 // Create Navigators
 const Tab = createBottomTabNavigator();
@@ -71,7 +72,7 @@ const Navigator = () => {
         />
         <Tab.Screen
           name="Child"
-          component={HomeStack}
+          component={ChildScreen}
           options={{ headerShown: false }}
         />
         <Tab.Screen
