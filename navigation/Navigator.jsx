@@ -11,6 +11,7 @@ import HomeScreen from "../screens/HomeScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import { useTheme } from "react-native-paper";
 import ChildScreen from "../screens/ChildScreen";
+import ChildDetailsScreen from "../screens/ChildDetailsScreen";
 
 // Create Navigators
 const Tab = createBottomTabNavigator();
@@ -24,6 +25,30 @@ const HomeStack = () => {
         name="HomeTab"
         component={HomeScreen}
         options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const ChildStack = () => {
+  const theme = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.primary },
+        headerTitleStyle: { fontFamily: "GothamRnd-Medium", fontSize: 20 },
+        headerTintColor: "white",
+      }}
+    >
+      <Stack.Screen
+        name="ChildTab"
+        component={ChildScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ChildDetails"
+        component={ChildDetailsScreen}
+        options={{ title: "Child Details" }}
       />
     </Stack.Navigator>
   );
@@ -72,7 +97,7 @@ const Navigator = () => {
         />
         <Tab.Screen
           name="Child"
-          component={ChildScreen}
+          component={ChildStack}
           options={{ headerShown: false }}
         />
         <Tab.Screen

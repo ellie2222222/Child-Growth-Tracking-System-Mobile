@@ -1,17 +1,27 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
-  ScrollView,
   View,
-  Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   FlatList,
   Animated,
 } from "react-native";
-import { Avatar, useTheme } from "react-native-paper";
+import {
+  Avatar,
+  Card,
+  FAB,
+  useTheme,
+  ActivityIndicator,
+} from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { DynamicHeader } from "../components/DynamicHeader";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import Text from "../components/Text";
+import { format } from "date-fns";
+import axios from "axios";
+import { useSnackbar } from "../contexts/SnackbarContext";
+import { ScrollView } from "react-native";
+import Title from "../components/Title";
 
 const getInitials = (name = "") =>
   name
@@ -22,127 +32,200 @@ const getInitials = (name = "") =>
 
 const ChildScreen = () => {
   const theme = useTheme();
+  const navigation = useNavigation();
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
+  const [children, setChildren] = useState([
+    {
+      _id: "67b6e52ce2def20232798e9e066",
+      name: "T",
+      birthDate: "2024-03-12T00:00:00.000Z",
+      note: "note",
+      gender: 0,
+      relationships: [
+        {
+          memberId: "6797349eff664e2381d90ba2",
+          type: "Parent",
+          _id: "67b6e52ce2def20798e9e067",
+        },
+      ],
+      createdAt: "2025-02-20T08:17:48.043Z",
+      updatedAt: "2025-02-24T12:36:40.778Z",
+    },
+    {
+      _id: "67b6e52ce2def23e066",
+      name: "T",
+      birthDate: "2024-03-12T00:00:00.000Z",
+      note: "note",
+      gender: 0,
+      relationships: [
+        {
+          memberId: "6797349eff664e2381d90ba2",
+          type: "Parent",
+          _id: "67b6e52ce2def20798e9e067",
+        },
+      ],
+      createdAt: "2025-02-20T08:17:48.043Z",
+      updatedAt: "2025-02-24T12:36:40.778Z",
+    },
+  ]);
 
-  const children = [
-    { id: 1, name: "Child 1", avatar: require("../assets/bg.jpg") },
-    { id: 2, name: "Child 2", avatar: require("../assets/bg.jpg") },
-    { id: 3, name: "Child 3", avatar: require("../assets/bg.jpg") },
-    { id: 4, name: "Child 3", avatar: require("../assets/bg.jpg") },
-    { id: 5, name: "Child 3", avatar: require("../assets/bg.jpg") },
-    { id: 6, name: "Child 3", avatar: require("../assets/bg.jpg") },
-    { id: 7, name: "Child 3", avatar: require("../assets/bg.jpg") },
-  ];
+  const [loading, setLoading] = useState(false);
+  const { showSnackbar } = useSnackbar();
 
-  const renderChildAvatar = ({ item }) => (
-    <View style={styles.avatarContainer}>
-      <Avatar.Text
-        size={80}
-        label={getInitials(item.name)}
-        labelStyle={{ color: "white" }}
-        style={[styles.avatar, { backgroundColor: theme.colors.primary}]}
-      />
-      <Text style={[styles.childName, { color: theme.colors.text }]}>
-        {item.name}
-      </Text>
-    </View>
+  const fetchChildren = async () => {
+    setLoading(true);
+    try {
+      // const response = await axios.get("http://localhost:4000/api/children");
+      // setChildren(response.data.children);
+    } catch (error) {
+      showSnackbar(
+        error.response?.data?.message ||
+          "Failed to load children. Please try again.",
+        5000,
+        "Close"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchChildren();
+    }, [])
   );
 
-  const renderAddChildButton = () => (
-    <TouchableOpacity style={styles.addChildButton}>
-      <Icon name="add" size={30} color={theme.colors.primary} />
-    </TouchableOpacity>
-  );
+  const renderChildItem = ({ item }) => {
+    const formattedBirthDate = format(new Date(item.birthDate), "MMM d, yyyy");
+
+    return (
+      <Card
+        style={styles(theme).childContainer}
+        onPress={() => navigation.navigate("ChildDetails", { child: item })}
+      >
+        <Card.Content style={{ flexDirection: "row", alignItems: "center" }}>
+          <Avatar.Text
+            size={50}
+            label={getInitials(item.name)}
+            style={{ backgroundColor: theme.colors.primary }}
+          />
+          <View style={styles(theme).childInfo}>
+            <Text variant="medium" style={styles(theme).childName}>
+              {item.name}
+            </Text>
+            <View style={styles(theme).childDetails}>
+              <Text style={[styles(theme).birthDate, { marginRight: 5 }]}>
+                {formattedBirthDate}
+              </Text>
+              <Icon
+                name={item.gender === "male" ? "male" : "female"}
+                size={20}
+              />
+            </View>
+          </View>
+          <View style={styles(theme).iconContainer}>
+            <TouchableOpacity>
+              <Icon name="edit" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Icon name="delete" size={24} color="red" />
+            </TouchableOpacity>
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  };
 
   return (
-    <View style={styles.container}>
-      <DynamicHeader value={scrollOffsetY} title="Child" />
-      <View style={styles.scrollViewWrapper}>
-        <ScrollView
-          scrollEventThrottle={16}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
-            { useNativeDriver: false }
-          )}
-          contentContainerStyle={styles.scrollViewContent}
-        >
-          <View style={styles.flatListWrapper}>
-            <FlatList
-              horizontal
-              data={children}
-              renderItem={renderChildAvatar}
-              keyExtractor={(item) => item.id.toString()}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[styles.horizontalList, { backgroundColor: theme.colors.secondary }]}
-              ListFooterComponent={renderAddChildButton}
-            />
-          </View>
-        </ScrollView>
-      </View>
+    <View style={styles(theme).container}>
+      <Title text="My children" style={{ fontSize: 24, marginVertical: 20 }} />
+      {loading ? (
+        <View style={styles(theme).loadingContainer}>
+          <ActivityIndicator
+            animating={true}
+            size="large"
+            color={theme.colors.primary}
+          />
+        </View>
+      ) : (
+        <FlatList
+          data={children}
+          renderItem={renderChildItem}
+          keyExtractor={(item) => item._id.toString()}
+          contentContainerStyle={styles(theme).listContainer}
+          style={styles(theme).scrollViewWrapper}
+        />
+      )}
+      <FAB
+        style={styles(theme).fab}
+        icon="plus"
+        color="white"
+        onPress={() => {}}
+      />
     </View>
   );
 };
 
 export default ChildScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingTop: 20,
-    paddingBottom: 20,
-  },
-  scrollViewWrapper: {
-    flex: 1,
-    marginTop: -10,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  flatListWrapper: {
-    borderRadius: 10,
-    overflow: "hidden",
-    marginHorizontal: 10, 
-    // iOS Shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    // Android Shadow
-    elevation: 2,
-  },  
-  horizontalList: {
-    padding: 10, 
-  },
-  avatarContainer: {
-    alignItems: "center",
-    marginRight: 20,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 50,
-  },
-  childName: {
-    marginTop: 8,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  addChildButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: "#EF6351",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+const styles = (theme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    listContainer: {
+      padding: 16,
+    },
+    scrollViewWrapper: {
+      flex: 1,
+      marginTop: -10,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      overflow: "hidden",
+      backgroundColor: "#fff",
+    },
+    scrollViewContent: {
+      paddingTop: 20,
+      paddingBottom: 20,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    childContainer: {
+      backgroundColor: "white",
+      marginBottom: 10,
+      borderRadius: 10,
+      elevation: 1,
+    },
+    childInfo: {
+      flex: 1,
+      marginLeft: 20,
+    },
+    childName: {
+      fontSize: 18,
+    },
+    childDetails: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 5,
+    },
+    birthDate: {
+      fontSize: 14,
+      color: theme.colors.text,
+    },
+    iconContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginLeft: 10,
+    },
+    fab: {
+      position: "absolute",
+      margin: 16,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.colors.primary,
+    },
+  });

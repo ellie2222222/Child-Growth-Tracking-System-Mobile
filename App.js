@@ -4,6 +4,7 @@ import { PaperProvider, DefaultTheme } from 'react-native-paper';
 import Navigator from './navigation/Navigator';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { SnackbarProvider } from './contexts/SnackbarContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,8 +49,10 @@ export default function App() {
 
   return (
     <PaperProvider theme={theme}>
-      <StatusBar barStyle="light-content" backgroundColor="#EF6351" />
-      <Navigator />
+      <SnackbarProvider>
+        <StatusBar barStyle="light-content" backgroundColor="#EF6351" />
+        <Navigator />
+      </SnackbarProvider>
     </PaperProvider>
   );
 }
