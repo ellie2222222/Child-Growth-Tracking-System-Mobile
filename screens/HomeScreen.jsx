@@ -394,7 +394,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <DynamicHeader value={scrollOffsetY} title={"GrowEasy"} />
+      <DynamicHeader value={scrollOffsetY} title={"Home"} />
 
       {/* ScrollView with Rounded Corners */}
       <View style={styles.scrollViewWrapper}>

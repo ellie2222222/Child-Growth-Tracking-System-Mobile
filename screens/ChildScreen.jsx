@@ -14,13 +14,10 @@ import {
   ActivityIndicator,
 } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { DynamicHeader } from "../components/DynamicHeader";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Text from "../components/Text";
 import { format } from "date-fns";
-import axios from "axios";
 import { useSnackbar } from "../contexts/SnackbarContext";
-import { ScrollView } from "react-native";
 import Title from "../components/Title";
 
 const getInitials = (name = "") =>
@@ -33,7 +30,6 @@ const getInitials = (name = "") =>
 const ChildScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation();
-  const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const [children, setChildren] = useState([
     {
       _id: "67b6e52ce2def20232798e9e066",

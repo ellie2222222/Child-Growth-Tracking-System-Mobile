@@ -5,19 +5,21 @@ import { NavigationContainer } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useTheme } from "react-native-paper";
 
-// Import Screens
+
 import HomeScreen from "../screens/HomeScreen";
 import SettingsScreen from "../screens/SettingsScreen";
-import { useTheme } from "react-native-paper";
 import ChildScreen from "../screens/ChildScreen";
 import ChildDetailsScreen from "../screens/ChildDetailsScreen";
+import LoginScreen from "../screens/LoginScreen"; 
+import SignupScreen from "../screens/SignupScreen"; 
 
-// Create Navigators
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Stack Navigator for Home
+
 const HomeStack = () => {
   return (
     <Stack.Navigator>
@@ -29,6 +31,7 @@ const HomeStack = () => {
     </Stack.Navigator>
   );
 };
+
 
 const ChildStack = () => {
   const theme = useTheme();
@@ -54,8 +57,7 @@ const ChildStack = () => {
   );
 };
 
-// Bottom Tab Navigator
-const Navigator = () => {
+const Navigator = ({ isAuthenticated }) => {
   const theme = useTheme();
 
   return (
@@ -86,18 +88,47 @@ const Navigator = () => {
           headerTitleStyle: { fontFamily: "GothamRnd-Medium", fontSize: 20 },
           tabBarLabelStyle: { fontFamily: "GothamRnd-Medium", fontSize: 10 },
           headerTintColor: "white",
-        })}>
+        })}
+      >
         <Tab.Screen
           name="Home"
           component={HomeStack}
           options={{ headerShown: false }}
         />
-        <Tab.Screen
-          name="Child"
-          component={ChildStack}
-          options={{ headerShown: false }}
-        />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        {isAuthenticated && (
+          <>
+            <Tab.Screen name="Child" component={ChildStack} />
+            <Tab.Screen name="Settings" component={SettingsScreen} />
+          </>
+        )}
+        {!isAuthenticated && (
+          <>
+            <Tab.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{
+                headerShown: false,
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons name="log-in-outline" size={size} color={color} />
+                ),
+              }}
+            />
+            <Tab.Screen
+              name="Signup"
+              component={SignupScreen}
+              options={{
+                headerShown: false,
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons
+                    name="person-add-outline"
+                    size={size}
+                    color={color}
+                  />
+                ),
+              }}
+            />
+          </>
+        )}
       </Tab.Navigator>
     </NavigationContainer>
   );
