@@ -1,10 +1,10 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Animated,
+  Modal,
 } from "react-native";
 import {
   Avatar,
@@ -12,6 +12,8 @@ import {
   FAB,
   useTheme,
   ActivityIndicator,
+  TextInput,
+  Button,
 } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
@@ -19,6 +21,7 @@ import Text from "../components/Text";
 import { format } from "date-fns";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import Title from "../components/Title";
+import api from "../configs/api";
 
 const getInitials = (name = "") =>
   name
@@ -30,49 +33,28 @@ const getInitials = (name = "") =>
 const ChildScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation();
-  const [children, setChildren] = useState([
-    {
-      _id: "67b6e52ce2def20232798e9e066",
-      name: "T",
-      birthDate: "2024-03-12T00:00:00.000Z",
-      note: "note",
-      gender: 0,
-      relationships: [
-        {
-          memberId: "6797349eff664e2381d90ba2",
-          type: "Parent",
-          _id: "67b6e52ce2def20798e9e067",
-        },
-      ],
-      createdAt: "2025-02-20T08:17:48.043Z",
-      updatedAt: "2025-02-24T12:36:40.778Z",
-    },
-    {
-      _id: "67b6e52ce2def23e066",
-      name: "T",
-      birthDate: "2024-03-12T00:00:00.000Z",
-      note: "note",
-      gender: 0,
-      relationships: [
-        {
-          memberId: "6797349eff664e2381d90ba2",
-          type: "Parent",
-          _id: "67b6e52ce2def20798e9e067",
-        },
-      ],
-      createdAt: "2025-02-20T08:17:48.043Z",
-      updatedAt: "2025-02-24T12:36:40.778Z",
-    },
-  ]);
-
+  const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
+
+  // Modal states
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [updateModalVisible, setUpdateModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  // Selected child for update/delete
+  const [selectedChild, setSelectedChild] = useState(null);
+
+  // Form states
+  const [name, setName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
 
   const fetchChildren = async () => {
     setLoading(true);
     try {
-      // const response = await axios.get("http://localhost:4000/api/children");
-      // setChildren(response.data.children);
+      const response = await api.get("/children");
+      setChildren(response.data.children);
     } catch (error) {
       showSnackbar(
         error.response?.data?.message ||
@@ -91,6 +73,65 @@ const ChildScreen = () => {
     }, [])
   );
 
+  // Handle create child
+  const handleCreateChild = async () => {
+    try {
+      const response = await api.post("/children", { name, birthDate, gender });
+      setChildren([...children, response.data.child]);
+      setCreateModalVisible(false);
+      showSnackbar("Child created successfully!", 3000, "Close");
+    } catch (error) {
+      showSnackbar(
+        error.response?.data?.message || "Failed to create child. Please try again.",
+        5000,
+        "Close"
+      );
+    }
+  };
+
+  // Handle update child
+  const handleUpdateChild = async () => {
+    try {
+      const response = await api.put(`/children/${selectedChild._id}`, {
+        name,
+        birthDate,
+        gender,
+      });
+      const updatedChildren = children.map((child) =>
+        child._id === selectedChild._id ? response.data.child : child
+      );
+      setChildren(updatedChildren);
+      setUpdateModalVisible(false);
+      showSnackbar("Child updated successfully!", 3000, "Close");
+    } catch (error) {
+      showSnackbar(
+        error.response?.data?.message || "Failed to update child. Please try again.",
+        5000,
+        "Close"
+      );
+    }
+  };
+
+  // Handle delete child
+  const handleDeleteChild = async () => {
+    try {
+      await api.delete(`/children/${selectedChild._id}`);
+      const updatedChildren = children.filter(
+        (child) => child._id !== selectedChild._id
+      );
+      setChildren(updatedChildren);
+      setDeleteModalVisible(false);
+      showSnackbar("Child deleted successfully!", 3000, "Close");
+    } catch (error) {
+      showSnackbar(
+        error.response?.data?.message || "Failed to delete child. Please try again.",
+        5000,
+        "Close"
+      );
+    }
+  };
+
+  // Render child item
   const renderChildItem = ({ item }) => {
     const formattedBirthDate = format(new Date(item.birthDate), "MMM d, yyyy");
 
@@ -120,10 +161,23 @@ const ChildScreen = () => {
             </View>
           </View>
           <View style={styles(theme).iconContainer}>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedChild(item);
+                setName(item.name);
+                setBirthDate(item.birthDate);
+                setGender(item.gender);
+                setUpdateModalVisible(true);
+              }}
+            >
               <Icon name="edit" size={24} color={theme.colors.primary} />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedChild(item);
+                setDeleteModalVisible(true);
+              }}
+            >
               <Icon name="delete" size={24} color="red" />
             </TouchableOpacity>
           </View>
@@ -149,14 +203,155 @@ const ChildScreen = () => {
           renderItem={renderChildItem}
           keyExtractor={(item) => item._id.toString()}
           contentContainerStyle={styles(theme).listContainer}
-          style={styles(theme).scrollViewWrapper}
         />
       )}
+
+      {/* Create Modal */}
+      <Modal
+        visible={createModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setCreateModalVisible(false)}
+      >
+        <View style={styles(theme).modalContainer}>
+          <View style={styles(theme).modalContent}>
+            <Title text="Add Child" style={{ fontSize: 20, marginBottom: 20 }} />
+            <TextInput
+              label="Name"
+              value={name}
+              onChangeText={setName}
+              style={styles(theme).input}
+            />
+            <TextInput
+              label="Birth Date"
+              value={birthDate}
+              onChangeText={setBirthDate}
+              style={styles(theme).input}
+            />
+            <TextInput
+              label="Gender"
+              value={gender}
+              onChangeText={setGender}
+              style={styles(theme).input}
+            />
+            <View style={styles(theme).modalButtons}>
+              <Button
+                mode="contained"
+                onPress={handleCreateChild}
+                style={styles(theme).button}
+                textColor="white"
+              >
+                Save
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => setCreateModalVisible(false)}
+                style={styles(theme).button}
+              >
+                Cancel
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Update Modal */}
+      <Modal
+        visible={updateModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setUpdateModalVisible(false)}
+      >
+        <View style={styles(theme).modalContainer}>
+          <View style={styles(theme).modalContent}>
+            <Title text="Edit Child" style={{ fontSize: 20, marginBottom: 20 }} />
+            <TextInput
+              label="Name"
+              value={name}
+              onChangeText={setName}
+              style={styles(theme).input}
+            />
+            <TextInput
+              label="Birth Date"
+              value={birthDate}
+              onChangeText={setBirthDate}
+              style={styles(theme).input}
+            />
+            <TextInput
+              label="Gender"
+              value={gender}
+              onChangeText={setGender}
+              style={styles(theme).input}
+            />
+            <View style={styles(theme).modalButtons}>
+              <Button
+                mode="contained"
+                onPress={handleUpdateChild}
+                style={styles(theme).button}
+                textColor="white"
+              >
+                Update
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => setUpdateModalVisible(false)}
+                style={styles(theme).button}
+              >
+                Cancel
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles(theme).modalContainer}>
+          <View style={styles(theme).modalContent}>
+            <Title
+              text="Delete Child"
+              style={{ fontSize: 20, marginBottom: 20 }}
+            />
+            <Text style={{ marginBottom: 20 }}>
+              Are you sure you want to delete {selectedChild?.name}?
+            </Text>
+            <View style={styles(theme).modalButtons}>
+              <Button
+                mode="contained"
+                onPress={handleDeleteChild}
+                style={[styles(theme).button, { backgroundColor: theme.colors.primary }]}
+                textColor="white"
+              >
+                Delete
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => setDeleteModalVisible(false)}
+                style={styles(theme).button}
+              >
+                Cancel
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* FAB for Create Modal */}
       <FAB
         style={styles(theme).fab}
         icon="plus"
         color="white"
-        onPress={() => {}}
+        onPress={() => {
+          setName("");
+          setBirthDate("");
+          setGender("");
+          setCreateModalVisible(true);
+        }}
       />
     </View>
   );
@@ -171,18 +366,6 @@ const styles = (theme) =>
     },
     listContainer: {
       padding: 16,
-    },
-    scrollViewWrapper: {
-      flex: 1,
-      marginTop: -10,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      overflow: "hidden",
-      backgroundColor: "#fff",
-    },
-    scrollViewContent: {
-      paddingTop: 20,
-      paddingBottom: 20,
     },
     loadingContainer: {
       flex: 1,
@@ -223,5 +406,33 @@ const styles = (theme) =>
       right: 0,
       bottom: 0,
       backgroundColor: theme.colors.primary,
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+    modalContent: {
+      width: "90%",
+      backgroundColor: "white",
+      borderRadius: 10,
+      padding: 20,
+    },
+    input: {
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: "black",
+      borderStyle: "solid",
+      borderRadius: 4,
+    },
+    modalButtons: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginTop: 10,
+    },
+    button: {
+      flex: 1,
+      marginHorizontal: 5,
     },
   });

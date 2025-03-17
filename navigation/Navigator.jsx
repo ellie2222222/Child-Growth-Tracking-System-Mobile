@@ -46,7 +46,7 @@ const ChildStack = () => {
       <Stack.Screen
         name="ChildTab"
         component={ChildScreen}
-        options={{ headerShown: false }}
+        options={{ title: "Child" }}
       />
       <Stack.Screen
         name="ChildDetails"
@@ -97,7 +97,8 @@ const Navigator = ({ isAuthenticated }) => {
         />
         {isAuthenticated && (
           <>
-            <Tab.Screen name="Child" component={ChildStack} />
+            <Tab.Screen name="Child" component={ChildStack} 
+          options={{ headerShown: false }}/>
             <Tab.Screen name="Settings" component={SettingsScreen} />
           </>
         )}
