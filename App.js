@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import React from "react";
-import { StatusBar } from "react-native";
-import { PaperProvider, DefaultTheme } from "react-native-paper";
-import Navigator from "./navigation/Navigator";
-import { useFonts } from "expo-font";
-import * as SplashScreen from "expo-splash-screen";
-=======
 import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { PaperProvider, DefaultTheme } from "react-native-paper";
@@ -14,23 +6,22 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import Navigator from "./navigation/Navigator";
-import store from "./store"; 
+import store from "./store";
 import { fetchUserCredentials } from "./features/authSlice";
->>>>>>> 13d32a87f5ab9567c4aa75c5b302108dfd000fdb
 
 SplashScreen.preventAutoHideAsync();
 
 const AuthWrapper = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const loading = useSelector((state) => state.auth.loading); 
+  const loading = useSelector((state) => state.auth.loading);
 
   useEffect(() => {
-    dispatch(fetchUserCredentials()); 
+    dispatch(fetchUserCredentials());
   }, [dispatch]);
 
   if (loading) {
-    return null; 
+    return null;
   }
 
   return <Navigator isAuthenticated={isAuthenticated} />;
