@@ -6,8 +6,8 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import Navigator from "./navigation/Navigator";
-import store from "./store";
 import { fetchUserCredentials } from "./features/authSlice";
+import store from "../'";
 
 SplashScreen.preventAutoHideAsync();
 
