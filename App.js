@@ -6,7 +6,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import Navigator from "./navigation/Navigator";
-import store from "./store"; 
+import store from "./store";
 import { fetchUserCredentials } from "./features/authSlice";
 
 SplashScreen.preventAutoHideAsync();
@@ -14,14 +14,14 @@ SplashScreen.preventAutoHideAsync();
 const AuthWrapper = () => {
   const dispatch = useDispatch();
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const loading = useSelector((state) => state.auth.loading); 
+  const loading = useSelector((state) => state.auth.loading);
 
   useEffect(() => {
-    dispatch(fetchUserCredentials()); 
+    dispatch(fetchUserCredentials());
   }, [dispatch]);
 
   if (loading) {
-    return null; 
+    return null;
   }
 
   return <Navigator isAuthenticated={isAuthenticated} />;
