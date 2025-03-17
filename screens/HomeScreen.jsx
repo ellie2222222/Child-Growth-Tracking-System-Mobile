@@ -20,6 +20,7 @@ import {
 import { DynamicHeader } from "../components/DynamicHeader";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import bannerImage from "../assets/banner_img.jpg";
+import { useNavigation } from "@react-navigation/native";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -28,6 +29,7 @@ const HomeScreen = () => {
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   // State to manage which FAQs are expanded
   const [expandedFaqs, setExpandedFaqs] = useState({});
+  const navigation = useNavigation();
 
   // Toggle FAQ expansion
   const toggleFaq = (id) => {
@@ -245,15 +247,20 @@ const HomeScreen = () => {
               fontFamily: theme.fonts.medium.fontFamily,
             },
           ]}>
-          Knowledge Sharing Blog
+          Knowledge Sharing Blogs
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("Blogs")}>
           <Text style={{ color: theme.colors.primary }}>View All</Text>
         </TouchableOpacity>
       </View>
 
       {blogPosts.map((post) => (
-        <TouchableOpacity key={post.id} style={styles.blogItem}>
+        <TouchableOpacity
+          key={post.id}
+          style={styles.blogItem}
+          onPress={() => {
+            navigation.navigate("BlogDetailed");
+          }}>
           <Image source={post.thumbnail} style={styles.blogThumbnail} />
           <View style={styles.blogContent}>
             <Text style={styles.blogTitle}>{post.title}</Text>
@@ -328,9 +335,9 @@ const HomeScreen = () => {
               fontFamily: theme.fonts.medium.fontFamily,
             },
           ]}>
-          FAQ
+          FAQs
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("FAQs")}>
           <Text style={{ color: theme.colors.primary }}>View All</Text>
         </TouchableOpacity>
       </View>
@@ -561,7 +568,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
-  // Membership section styles
   membershipSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -571,11 +577,13 @@ const styles = StyleSheet.create({
   },
   membershipCard: {
     width: windowWidth * 0.7,
-    marginRight: 12,
+    marginRight: 15,
     elevation: 2,
+    backgroundColor: "#f9f9f9",
   },
   membershipName: {
-    fontSize: 18,
+    fontWeight: "bold",
+    fontSize: 20,
     marginBottom: 6,
   },
   membershipPrice: {
