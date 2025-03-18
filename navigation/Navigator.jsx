@@ -7,18 +7,18 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useTheme } from "react-native-paper";
 
-
 import HomeScreen from "../screens/HomeScreen";
 import SettingsScreen from "../screens/SettingsScreen";
 import ChildScreen from "../screens/ChildScreen";
 import ChildDetailsScreen from "../screens/ChildDetailsScreen";
-import LoginScreen from "../screens/LoginScreen"; 
-import SignupScreen from "../screens/SignupScreen"; 
-
+import LoginScreen from "../screens/LoginScreen";
+import SignupScreen from "../screens/SignupScreen";
+import BlogsScreen from "../screens/Blog/BlogsScreen";
+import { BlogDetailedScreen } from "../screens/Blog/BlogDetailedScreen";
+import { FAQsScreen } from "../screens/FAQ/FAQScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
 
 const HomeStack = () => {
   return (
@@ -32,7 +32,6 @@ const HomeStack = () => {
   );
 };
 
-
 const ChildStack = () => {
   const theme = useTheme();
   return (
@@ -41,8 +40,7 @@ const ChildStack = () => {
         headerStyle: { backgroundColor: theme.colors.primary },
         headerTitleStyle: { fontFamily: "GothamRnd-Medium", fontSize: 20 },
         headerTintColor: "white",
-      }}
-    >
+      }}>
       <Stack.Screen
         name="ChildTab"
         component={ChildScreen}
@@ -165,8 +163,7 @@ const Navigator = ({ isAuthenticated }) => {
             marginBottom: 2,
           },
           headerTintColor: "white",
-        })}
-      >
+        })}>
         <Tab.Screen
           name="Home"
           component={HomeStack}
@@ -174,9 +171,12 @@ const Navigator = ({ isAuthenticated }) => {
         />
         {isAuthenticated && (
           <>
-            <Tab.Screen name="Child" component={ChildStack} 
-          options={{ headerShown: false }}/>
-            <Tab.Screen name="Settings" component={SettingsScreen} />
+            <Tab.Screen
+              name="Child"
+              component={ChildStack}
+              options={{ headerShown: false }}
+            />
+            <Tab.Screen name="Settings" component={SettingsStack} />
           </>
         )}
         {!isAuthenticated && (

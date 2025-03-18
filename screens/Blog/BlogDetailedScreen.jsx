@@ -12,7 +12,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
 const windowWidth = Dimensions.get("window").width;
 
-const BlogDetailedScreen = ({ route }) => {
+export const BlogDetailedScreen = ({ route }) => {
   const theme = useTheme();
   const scrollOffsetY = new Animated.Value(0);
   const { post } = route.params || {};
@@ -210,5 +210,3 @@ const BlogDetailedScreen = ({ route }) => {
     </View>
   );
 };
-
-export default BlogDetailedScreen;

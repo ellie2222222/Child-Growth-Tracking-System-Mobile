@@ -9,7 +9,7 @@ import {
 import { useTheme, Text, Card, Button } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-const FAQsScreen = () => {
+export const FAQsScreen = () => {
   const theme = useTheme();
   const scrollOffsetY = new Animated.Value(0);
   const [expandedFaqs, setExpandedFaqs] = useState({});
@@ -229,5 +229,3 @@ const FAQsScreen = () => {
     </View>
   );
 };
-
-export default FAQsScreen;

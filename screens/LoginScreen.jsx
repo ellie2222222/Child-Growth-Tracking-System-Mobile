@@ -16,7 +16,6 @@ const LoginScreen = () => {
   const navigation = useNavigation();
   const { showSnackbar } = useSnackbar();
 
-  
   const LoginSchema = Yup.object().shape({
     email: Yup.string()
       .email("Invalid email format")
@@ -27,21 +26,18 @@ const LoginScreen = () => {
   });
 
   const handleLogin = async (values, { setSubmitting, setErrors }) => {
+    console.log("hihi login nè");
+
     try {
       await api.post("/auth/login", values);
       dispatch(fetchUserCredentials());
-      showSnackbar(
-        "Login success",
-        5000,
-        "Close"
-      );
-      navigation.navigate("Home"); 
+      showSnackbar("Login success", 5000, "Close");
+      navigation.navigate("Home");
     } catch (error) {
       if (error.response) {
         const { status, data } = error.response;
 
         if (status === 400) {
-          
           if (data.validationErrors) {
             const validationErrors = data.validationErrors || [];
             const errors = {};
@@ -50,14 +46,17 @@ const LoginScreen = () => {
             });
             setErrors(errors);
           } else {
-            setErrors({ general: data.message || "Login failed. Please try again." });
+            setErrors({
+              general: data.message || "Login failed. Please try again.",
+            });
           }
         } else {
-          
-          setErrors({ general: data.message || "Login failed. Please try again." });
+          setErrors({
+            general: data.message || "Login failed. Please try again.",
+          });
         }
       } else {
-        
+        console.log("hihi login nè nhưng lỗi rồi");
         setErrors({ general: "Network error. Please check your connection." });
       }
     } finally {
@@ -70,9 +69,16 @@ const LoginScreen = () => {
       <Formik
         initialValues={{ email: "", password: "" }}
         validationSchema={LoginSchema}
-        onSubmit={handleLogin}
-      >
-        {({ handleSubmit, handleChange, handleBlur, values, errors, touched, isSubmitting }) => (
+        onSubmit={handleLogin}>
+        {({
+          handleSubmit,
+          handleChange,
+          handleBlur,
+          values,
+          errors,
+          touched,
+          isSubmitting,
+        }) => (
           <>
             <TextInput
               label="Email"

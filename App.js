@@ -7,7 +7,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import Navigator from "./navigation/Navigator";
 import { fetchUserCredentials } from "./features/authSlice";
-import store from "../'";
+import store from "./store";
 
 SplashScreen.preventAutoHideAsync();
 
