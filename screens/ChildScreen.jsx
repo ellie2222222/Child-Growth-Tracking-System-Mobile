@@ -48,7 +48,8 @@ const ChildScreen = () => {
   // Form states
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender, setGender] = useState(0);
+  
 
   const fetchChildren = async () => {
     setLoading(true);

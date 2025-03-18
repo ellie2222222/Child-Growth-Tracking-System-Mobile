@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { useTheme } from "react-native-paper";
 
 
@@ -14,6 +13,10 @@ import ChildScreen from "../screens/ChildScreen";
 import ChildDetailsScreen from "../screens/ChildDetailsScreen";
 import LoginScreen from "../screens/LoginScreen"; 
 import SignupScreen from "../screens/SignupScreen"; 
+import BlogDetailedScreen from "../screens/Blog/BlogDetailedScreen";
+import BlogsScreen from "../screens/Blog/BlogsScreen";
+import FAQsScreen from "../screens/FAQ/FAQScreen";
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 
 const Tab = createBottomTabNavigator();
@@ -176,7 +179,13 @@ const Navigator = ({ isAuthenticated }) => {
           <>
             <Tab.Screen name="Child" component={ChildStack} 
           options={{ headerShown: false }}/>
-            <Tab.Screen name="Settings" component={SettingsScreen} />
+            <Tab.Screen name="Settings" component={SettingsScreen} 
+            options={{
+                headerShown: false,
+                tabBarIcon: ({ color, size }) => (
+                  <FontAwesome6 name="gear" size={size} color={color} />
+                ),
+              }}/>
           </>
         )}
         {!isAuthenticated && (
