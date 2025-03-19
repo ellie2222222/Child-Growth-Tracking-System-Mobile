@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Animated,
   ScrollView,
@@ -21,15 +21,55 @@ import { DynamicHeader } from "../components/DynamicHeader";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import bannerImage from "../assets/banner_img.jpg";
 import { useNavigation } from "@react-navigation/native";
+import api from "../configs/api";
 
 const windowWidth = Dimensions.get("window").width;
 
 const HomeScreen = () => {
   const theme = useTheme();
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
-  // State to manage which FAQs are expanded
   const [expandedFaqs, setExpandedFaqs] = useState({});
   const navigation = useNavigation();
+
+  const [membershipPlans, setMembershipPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchMembershipPlans = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/membership-packages");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch membership plans");
+        }
+
+        console.log(response);
+
+        const data = await response.json();
+        const mappedPlans = data.packages.map((plan) => ({
+          id: plan._id,
+          name: plan.name,
+          price: `${plan.price.value.toLocaleString()} ${plan.price.unit}`,
+          features: [
+            plan.description,
+            `Post Limit: ${plan.postLimit}`,
+            `Update Child Data Limit: ${plan.updateChildDataLimit}`,
+            `Download Chart Limit: ${plan.downloadChart}`,
+            `Duration: ${plan.duration.value} ${plan.duration.unit}(s)`,
+          ],
+        }));
+        setMembershipPlans(mappedPlans);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchMembershipPlans();
+  }, []);
 
   // Toggle FAQ expansion
   const toggleFaq = (id) => {
@@ -97,47 +137,6 @@ const HomeScreen = () => {
     },
   ];
 
-  // Membership plans
-  const membershipPlans = [
-    {
-      id: 1,
-      name: "Basic",
-      price: "Free",
-      features: [
-        "Track 1 child",
-        "Basic charts",
-        "Monthly updates",
-        "Access to knowledge sharing blog",
-      ],
-    },
-    {
-      id: 2,
-      name: "Family",
-      price: "$99/month",
-      features: [
-        "Track 5 children",
-        "Detailed charts",
-        "Daily updates",
-        "1 doctor consultation/month",
-        "Smart alerts",
-        "Export PDF reports",
-      ],
-    },
-    {
-      id: 3,
-      name: "Professional",
-      price: "$199/month",
-      features: [
-        "Unlimited children",
-        "Advanced charts",
-        "Unlimited consultations",
-        "AI growth prediction analysis",
-        "Priority 24/7 support",
-        "Personalized nutrition advice",
-      ],
-    },
-  ];
-
   // FAQ data
   const faqs = [
     {
@@ -171,12 +170,25 @@ const HomeScreen = () => {
           GrowEasy helps you comprehensively monitor your child's growth from
           infancy to adulthood with medical-standard charts.
         </Paragraph>
-        <Button
+        <TouchableOpacity
           mode="contained"
-          style={{ backgroundColor: theme.colors.primary, marginTop: 10 }}
+          style={{
+            backgroundColor: theme.colors.primary,
+            marginTop: 10,
+            paddingVertical: 15,
+            borderRadius: 50,
+            alignItems: "center",
+          }}
           onPress={() => {}}>
-          Start Now
-        </Button>
+          <Text
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontFamily: theme.fonts.medium.fontFamily,
+            }}>
+            Get Started
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -287,40 +299,49 @@ const HomeScreen = () => {
         Membership Plans
       </Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.membershipScroll}>
-        {membershipPlans.map((plan) => (
-          <Card key={plan.id} style={styles.membershipCard}>
-            <Card.Content>
-              <Title style={styles.membershipName}>{plan.name}</Title>
-              <Title style={styles.membershipPrice}>{plan.price}</Title>
+      {loading ? (
+        <Text>Loading membership plans...</Text>
+      ) : error ? (
+        <Text style={{ color: "red" }}>Error: {error}</Text>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.membershipScroll}>
+          {membershipPlans.map((plan) => (
+            <Card key={plan.id} style={styles.membershipCard}>
+              <Card.Content>
+                <Title style={styles.membershipName}>{plan.name}</Title>
+                <Title style={styles.membershipPrice}>{plan.price}</Title>
 
-              {plan.features.map((feature, idx) => (
-                <View key={idx} style={styles.membershipFeature}>
-                  <Icon
-                    name="check-circle"
-                    size={16}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles.membershipFeatureText}>{feature}</Text>
-                </View>
-              ))}
+                {plan.features.map((feature, idx) => (
+                  <View key={idx} style={styles.membershipFeature}>
+                    <Icon
+                      name="check-circle"
+                      size={16}
+                      color={theme.colors.primary}
+                    />
+                    <Text style={styles.membershipFeatureText}>{feature}</Text>
+                  </View>
+                ))}
 
-              <Button
-                mode={plan.id === 1 ? "outlined" : "contained"}
-                style={styles.membershipButton}
-                labelStyle={{
-                  color: plan.id === 1 ? theme.colors.primary : "white",
-                }}
-                onPress={() => {}}>
-                {plan.id === 1 ? "Sign Up" : "Upgrade"}
-              </Button>
-            </Card.Content>
-          </Card>
-        ))}
-      </ScrollView>
+                <Button
+                  mode={plan.price === "699,000 VND" ? "outlined" : "contained"} // Adjust logic based on cheapest plan
+                  style={styles.membershipButton}
+                  labelStyle={{
+                    color:
+                      plan.price === "699,000 VND"
+                        ? theme.colors.primary
+                        : "white",
+                  }}
+                  onPress={() => {}}>
+                  {plan.price === "699,000 VND" ? "Sign Up" : "Upgrade"}
+                </Button>
+              </Card.Content>
+            </Card>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 
@@ -400,10 +421,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <DynamicHeader value={scrollOffsetY} title={"Home"} />
-
-      {/* ScrollView with Rounded Corners */}
       <View style={styles.scrollViewWrapper}>
         <ScrollView
           scrollEventThrottle={16}
@@ -413,25 +431,12 @@ const HomeScreen = () => {
             { useNativeDriver: false }
           )}
           contentContainerStyle={styles.scrollViewContent}>
-          {/* Hero section with app introduction */}
           {renderHeroSection()}
-
-          {/* App information */}
           {renderAppInfo()}
-
-          {/* Feature highlights */}
           {renderFeatureHighlights()}
-
-          {/* Membership plans */}
           {renderMembershipPlans()}
-
-          {/* Blog posts */}
           {renderBlogPosts()}
-
-          {/* FAQ section */}
           {renderFAQSection()}
-
-          {/* Call to action */}
           {renderCallToAction()}
         </ScrollView>
       </View>
@@ -466,8 +471,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-
-  // Hero section styles
   heroSection: {
     marginBottom: 20,
   },
@@ -488,8 +491,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 8,
   },
-
-  // App info section styles
   appInfoSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -498,8 +499,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 20,
   },
-
-  // Feature highlights styles
   featuresSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -530,8 +529,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 12,
   },
-
-  // Blog section styles
   blogSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -567,7 +564,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 12,
   },
-
   membershipSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -602,8 +598,6 @@ const styles = StyleSheet.create({
   membershipButton: {
     marginTop: 12,
   },
-
-  // FAQ section styles
   faqSection: {
     paddingHorizontal: 16,
     marginBottom: 20,
@@ -623,7 +617,7 @@ const styles = StyleSheet.create({
   faqQuestion: {
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 4, // Default margin
+    marginBottom: 4,
   },
   faqAnswerContainer: {
     overflow: "hidden",
@@ -638,8 +632,6 @@ const styles = StyleSheet.create({
     borderLeftColor: "#4682B4",
     paddingBottom: 4,
   },
-
-  // Call to action styles
   ctaSection: {
     paddingHorizontal: 16,
     marginBottom: 20,

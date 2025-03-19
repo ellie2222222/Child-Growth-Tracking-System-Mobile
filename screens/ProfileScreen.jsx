@@ -5,7 +5,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Text from "../components/Text"; // Giả sử bạn có component Text
 import Title from "../components/Title"; // Giả sử bạn có component Title
 
-const ProfileScreen = () => {
+export const ProfileScreen = () => {
   const theme = useTheme();
   const [userInfo] = useState({
     name: "John Doe",
@@ -155,5 +155,3 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
 });
-
-export default ProfileScreen;

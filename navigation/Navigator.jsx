@@ -12,25 +12,14 @@ import ChildScreen from "../screens/ChildScreen";
 import ChildDetailsScreen from "../screens/ChildDetailsScreen";
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
-import BlogDetailedScreen from "../screens/Blog/BlogDetailedScreen";
 import BlogsScreen from "../screens/Blog/BlogsScreen";
-import FAQsScreen from "../screens/FAQ/FAQScreen";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { BlogDetailedScreen } from "../screens/Blog/BlogDetailedScreen";
+import { FAQsScreen } from "../screens/FAQ/FAQsScreen";
+import { ProfileScreen } from "../screens/ProfileScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-const HomeStack = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen
-        name="HomeTab"
-        component={HomeScreen}
-        options={{ headerShown: false }}
-      />
-    </Stack.Navigator>
-  );
-};
 
 const ChildStack = () => {
   const theme = useTheme();
@@ -178,7 +167,7 @@ const Navigator = ({ isAuthenticated }) => {
             />
             <Tab.Screen
               name="Settings"
-              component={SettingsScreen}
+              component={SettingsStack}
               options={{
                 headerShown: false,
                 tabBarIcon: ({ color, size }) => (
