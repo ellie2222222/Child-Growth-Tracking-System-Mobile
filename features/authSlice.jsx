@@ -11,9 +11,9 @@ export const fetchUserCredentials = createAsyncThunk(
         `${process.env.EXPO_LOCAL_API_URL}/auth/me`,
         { withCredentials: true }
       );
-      return response.data.user; // Return the user data
+      return response.data.user;
     } catch (error) {
-      return rejectWithValue(error.response.data); // Handle errors
+      return rejectWithValue(error.response.data);
     }
   }
 );

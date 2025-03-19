@@ -6,8 +6,13 @@ import Text from "../components/Text";
 import Title from "../components/Title";
 import Button from "../components/Button";
 import { useNavigation } from "@react-navigation/native";
+import { use } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import api from "../configs/api";
 
 const SettingsScreen = () => {
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const dispatch = useDispatch();
   const theme = useTheme();
   const [name] = useState("John Doe");
   const [email] = useState("john@example.com");
@@ -103,6 +108,15 @@ const SettingsScreen = () => {
             />
           </View>
         </View>
+        {isAuthenticated && (
+          <Button
+            variant="contained"
+            textVariant="regular"
+            title="Logout"
+            style={styles.logoutButton}
+            textStyle={styles.logoutButtonText}
+          />
+        )}
       </ScrollView>
     </View>
   );
@@ -111,11 +125,11 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6FA", // Màu nền nhẹ nhàng
+    backgroundColor: "#F5F6FA",
   },
   scrollViewContent: {
     padding: 20,
-    paddingBottom: 40, // Đệm dưới để nội dung không bị che khuất
+    paddingBottom: 40,
   },
   userInfoSection: {
     backgroundColor: "#FFFFFF",
@@ -125,7 +139,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 20,
-    elevation: 3, // Hiệu ứng bóng nhẹ
+    elevation: 3,
   },
   avatar: {
     marginRight: 15,

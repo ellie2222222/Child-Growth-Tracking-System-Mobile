@@ -119,7 +119,7 @@ const Navigator = ({ isAuthenticated }) => {
                   color={color}
                 />
               );
-            } else if (route.name === "SettingsTab") {
+            } else if (route.name === "SettingsTabs") {
               return (
                 <Ionicons
                   name={focused ? "settings" : "settings-outline"}
@@ -166,13 +166,11 @@ const Navigator = ({ isAuthenticated }) => {
               options={{ headerShown: false }}
             />
             <Tab.Screen
-              name="Settings"
+              name="SettingsTabs"
               component={SettingsStack}
               options={{
                 headerShown: false,
-                tabBarIcon: ({ color, size }) => (
-                  <FontAwesome6 name="gear" size={size} color={color} />
-                ),
+                tabBarLabel: "Settings",
               }}
             />
           </>
