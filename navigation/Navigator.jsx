@@ -158,7 +158,7 @@ const Navigator = ({ isAuthenticated }) => {
           component={HomeStack}
           options={{ headerShown: false }}
         />
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <>
             <Tab.Screen
               name="Child"
@@ -176,8 +176,7 @@ const Navigator = ({ isAuthenticated }) => {
               }}
             />
           </>
-        )}
-        {!isAuthenticated && (
+        ) : (
           <>
             <Tab.Screen
               name="Login"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -10,49 +10,95 @@ import {
 } from "react-native";
 import { useTheme, Text, Card, Button } from "react-native-paper";
 import bannerImage from "../../assets/banner_img.jpg";
+import api from "../../configs/api";
 
 const BlogsScreen = ({ navigation }) => {
   const theme = useTheme();
   const scrollOffsetY = new Animated.Value(0);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const blogPosts = [
-    {
-      id: 1,
-      title: "5 child development signs to watch for",
-      thumbnail: bannerImage,
-      date: "03/10/2025",
-      excerpt:
-        "Early detection of abnormal signs helps with timely intervention...",
-    },
-    {
-      id: 2,
-      title: "Optimal nutrition for children aged 2-5",
-      thumbnail: bannerImage,
-      date: "03/05/2025",
-      excerpt: "Foods to add to ensure comprehensive development...",
-    },
-    {
-      id: 3,
-      title: "Ideal timing for assessing child growth",
-      thumbnail: bannerImage,
-      date: "03/01/2025",
-      excerpt: "Schedule for monitoring height and weight by stage...",
-    },
-    {
-      id: 4,
-      title: "How to support your child’s emotional growth",
-      thumbnail: bannerImage,
-      date: "02/25/2025",
-      excerpt: "Tips to nurture emotional intelligence in children...",
-    },
-    {
-      id: 5,
-      title: "Understanding your child’s sleep patterns",
-      thumbnail: bannerImage,
-      date: "02/20/2025",
-      excerpt: "How sleep impacts growth and development...",
-    },
-  ];
+  const PAGE_SIZE = 5; // Number of posts per page
+
+  const fetchBlogPosts = async (pageNum, append = false) => {
+    try {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      console.log("Fetching blog posts with params:", {
+        page: pageNum,
+        size: PAGE_SIZE,
+        sortBy: "date",
+        order: "descending",
+      });
+
+      const response = await api.get("/posts", {
+        params: {
+          page: pageNum,
+          size: PAGE_SIZE,
+          sortBy: "date",
+          order: "descending",
+        },
+      });
+
+      if (!response.data || !response.data.posts) {
+        throw new Error("Invalid blog post data received from API");
+      }
+
+      const posts = response.data.posts.map((post) => ({
+        id: post._id,
+        title: post.title,
+        thumbnail: post.thumbnailUrl || bannerImage,
+        date: new Date(post.createdAt).toLocaleDateString(),
+        excerpt:
+          post.content.replace(/<[^>]+>/g, "").substring(0, 60) + "..." ||
+          "No excerpt available",
+      }));
+
+      if (append) {
+        setBlogPosts((prevPosts) => [...prevPosts, ...posts]);
+      } else {
+        setBlogPosts(posts);
+      }
+
+      if (response.data.posts.length < PAGE_SIZE) {
+        setHasMore(false);
+      }
+
+      console.log("Blog posts fetched successfully:", posts);
+    } catch (err) {
+      console.error(
+        "Error fetching blog posts:",
+        err.response ? err.response.data : err.message
+      );
+      setError(err.message || "Failed to fetch blog posts");
+    } finally {
+      if (append) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchBlogPosts(page);
+  }, []);
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchBlogPosts(nextPage, true);
+    }
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -71,7 +117,7 @@ const BlogsScreen = ({ navigation }) => {
       fontWeight: "bold",
       color: "#333",
       marginBottom: 8,
-      fontFamily: "GothamRnd-Medium", // Đồng bộ font với Navigator
+      fontFamily: "GothamRnd-Medium",
     },
     headerDescription: {
       fontSize: 14,
@@ -121,8 +167,8 @@ const BlogsScreen = ({ navigation }) => {
       borderWidth: 1,
       borderColor: "#e0e0ff",
       marginTop: 16,
-      elevation: 3, // Tăng bóng cho Android
-      shadowColor: "#000", // Bóng cho iOS
+      elevation: 3,
+      shadowColor: "#000",
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.15,
       shadowRadius: 5,
@@ -150,11 +196,26 @@ const BlogsScreen = ({ navigation }) => {
       borderRadius: 8,
       paddingHorizontal: 12,
     },
+    loadMoreButton: {
+      marginVertical: 16,
+      alignSelf: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+    },
+    loadMoreText: {
+      color: "white",
+      fontWeight: "500",
+    },
+    noMoreText: {
+      textAlign: "center",
+      color: "#666",
+      marginVertical: 16,
+    },
   });
 
   return (
     <View style={styles.container}>
-      {/* ScrollView */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollViewContent}
@@ -163,7 +224,6 @@ const BlogsScreen = ({ navigation }) => {
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}>
-        {/* Header Section */}
         <View style={styles.headerSection}>
           <Text style={styles.headerTitle}>Knowledge Sharing Blogs</Text>
           <Text style={styles.headerDescription}>
@@ -172,26 +232,58 @@ const BlogsScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Blog Posts */}
         <View style={styles.blogSection}>
-          {blogPosts.map((post) => (
-            <TouchableOpacity
-              key={post.id}
-              style={styles.blogItem}
-              onPress={() => navigation.navigate("BlogDetailed")}>
-              <Image source={post.thumbnail} style={styles.blogThumbnail} />
-              <View style={styles.blogContent}>
-                <Text style={styles.blogTitle}>{post.title}</Text>
-                <Text style={styles.blogExcerpt} numberOfLines={2}>
-                  {post.excerpt}
-                </Text>
-                <Text style={styles.blogDate}>{post.date}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {loading && blogPosts.length === 0 ? (
+            <Text>Loading blog posts...</Text>
+          ) : error ? (
+            <Text style={{ color: "red" }}>Error: {error}</Text>
+          ) : (
+            blogPosts.map((post) => (
+              <TouchableOpacity
+                key={post.id}
+                style={styles.blogItem}
+                onPress={() =>
+                  navigation.navigate("BlogDetailed", { postId: post.id })
+                }>
+                <Image
+                  source={
+                    typeof post.thumbnail === "string"
+                      ? { uri: post.thumbnail }
+                      : post.thumbnail
+                  }
+                  style={styles.blogThumbnail}
+                />
+                <View style={styles.blogContent}>
+                  <Text style={styles.blogTitle}>{post.title}</Text>
+                  <Text style={styles.blogExcerpt} numberOfLines={2}>
+                    {post.excerpt}
+                  </Text>
+                  <Text style={styles.blogDate}>{post.date}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
-        {/* Call to Action */}
+        {blogPosts.length > 0 && (
+          <View>
+            {hasMore ? (
+              <Button
+                mode="contained"
+                style={styles.loadMoreButton}
+                onPress={handleLoadMore}
+                loading={loadingMore}
+                disabled={loadingMore}>
+                <Text style={styles.loadMoreText}>
+                  {loadingMore ? "Loading..." : "Load More"}
+                </Text>
+              </Button>
+            ) : (
+              <Text style={styles.noMoreText}>No more posts to load</Text>
+            )}
+          </View>
+        )}
+
         <Card style={styles.ctaCard}>
           <Card.Content style={styles.ctaContent}>
             <View>

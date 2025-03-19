@@ -1,33 +1,66 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
   Dimensions,
   Animated,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useTheme, Text, Card, Button, Divider } from "react-native-paper";
 import { DynamicHeader } from "../../components/DynamicHeader";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import api from "../../configs/api";
 
 const windowWidth = Dimensions.get("window").width;
 
-export const BlogDetailedScreen = ({ route }) => {
+export const BlogDetailedScreen = ({ route, navigation }) => {
   const theme = useTheme();
   const scrollOffsetY = new Animated.Value(0);
-  const { post } = route.params || {};
+  const { postId } = route.params || {};
+  const [blogPost, setBlogPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const blogPost = post || {
-    id: 1,
-    title: "5 child development signs to watch for",
-    date: "03/10/2025",
-    excerpt:
-      "Early detection of abnormal signs helps with timely intervention...",
-    content:
-      "Identifying developmental signs early is crucial for a child's health. Here are five key signs to watch for: 1) Delayed speech or language skills, 2) Limited social interaction, 3) Motor skill delays, 4) Unusual behavior patterns, and 5) Regression in milestones. If you notice any of these, consult a pediatrician promptly. GrowEasy provides tools to track these milestones and send smart alerts to parents.\n\nEarly intervention can make a significant difference in a child’s development trajectory. For example, speech delays might indicate hearing issues or developmental disorders like autism, which can be addressed with therapies if caught early. Similarly, limited social interaction could be a sign of anxiety or social developmental delays, which benefit from early behavioral interventions.\n\nGrowEasy not only tracks these signs but also provides actionable insights. With smart alerts, you’ll be notified if your child’s development deviates from expected milestones, allowing you to consult with professionals at the right time. Our app also offers resources and connections to pediatric specialists to guide you through every step of your child’s growth journey.",
-  };
+  useEffect(() => {
+    const fetchBlogPost = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/posts/${postId}`);
 
-  // Định nghĩa styles bên trong component để sử dụng theme
+        if (!response.data || !response.data.post) {
+          throw new Error("Invalid blog post data received from API");
+        }
+
+        const post = response.data.post;
+        setBlogPost({
+          id: post._id,
+          title: post.title,
+          date: new Date(post.createdAt).toLocaleDateString(),
+          content: post.content.replace(/<[^>]+>/g, ""),
+          thumbnail: post.thumbnailUrl,
+        });
+      } catch (err) {
+        console.error(
+          "Error fetching blog post:",
+          err.response ? err.response.data : err.message
+        );
+        setError(err.message || "Failed to fetch blog post");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (postId) {
+      fetchBlogPost();
+    } else {
+      setLoading(false);
+      setError("No post ID provided");
+    }
+  }, [postId]);
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -35,115 +68,114 @@ export const BlogDetailedScreen = ({ route }) => {
     },
     scrollViewContent: {
       padding: 16,
-      paddingBottom: 40, // Tăng paddingBottom để tạo cảm giác dài hơn
+      paddingBottom: 40,
     },
     contentSection: {
       backgroundColor: "#fff",
+      borderRadius: 12,
+      padding: 16,
+      elevation: 2,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    header: {
+      marginBottom: 20,
+    },
+    thumbnail: {
+      width: "100%",
+      height: 200,
+      borderRadius: 12,
+      marginBottom: 16,
     },
     dateText: {
-      fontSize: 12,
-      color: "#666",
-      marginBottom: 12,
+      fontSize: 14,
+      color: "#777",
+      marginBottom: 8,
       fontStyle: "italic",
     },
     titleText: {
-      fontSize: 28, // Tăng kích thước tiêu đề
-      fontWeight: "bold",
-      color: "#333",
-      marginBottom: 16,
+      fontSize: 28,
+      fontWeight: "700",
+      color: "#1a1a1a",
+      marginBottom: 12,
       lineHeight: 34,
-      fontFamily: "GothamRnd-Medium", // Sử dụng font giống Navigator
+      fontFamily: "GothamRnd-Medium",
     },
     excerptText: {
       fontSize: 16,
       color: "#444",
-      marginBottom: 24,
+      marginBottom: 20,
       lineHeight: 24,
       fontStyle: "italic",
       borderLeftWidth: 4,
       borderLeftColor: theme.colors.primary,
       paddingLeft: 12,
+      backgroundColor: "#f9f9f9",
+      paddingVertical: 10,
+      borderRadius: 8,
     },
     contentText: {
-      fontSize: 14,
-      color: "#666",
-      lineHeight: 24, // Tăng khoảng cách dòng để dễ đọc
-      marginBottom: 32,
+      fontSize: 16,
+      color: "#333",
+      lineHeight: 26,
+      marginBottom: 24,
+      textAlign: "justify",
     },
     divider: {
+      height: 1,
+      backgroundColor: "#e0e0e0",
       marginVertical: 24,
-      backgroundColor: "#e0e0ff",
-    },
-    relatedArticlesSection: {
-      marginTop: 32,
-    },
-    relatedArticlesTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
-      color: "#333",
-      marginBottom: 16,
-    },
-    relatedArticleItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: "#f0f0f0",
-    },
-    relatedArticleIcon: {
-      marginRight: 12,
-    },
-    relatedArticleText: {
-      fontSize: 14,
-      color: "#444",
-      flex: 1,
     },
     ctaCard: {
-      backgroundColor: "#f9f9ff",
+      backgroundColor: "#eef2ff",
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: "#e0e0ff",
+      borderColor: "#d0d8ff",
       marginTop: 32,
-      elevation: 3, // Tăng bóng cho Android
-      shadowColor: "#000", // Bóng cho iOS
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.15,
-      shadowRadius: 5,
+      elevation: 3,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
     },
     ctaContent: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingVertical: 16,
-      paddingHorizontal: 16,
+      padding: 16,
     },
     ctaTitle: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: "500",
-      color: "#333",
-      marginBottom: 8,
+      color: "#1a1a1a",
     },
     ctaText: {
-      fontSize: 13,
-      color: "#444",
-      width: "70%",
+      fontSize: 14,
+      color: "#555",
+      width: "65%",
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
       borderRadius: 8,
-      paddingHorizontal: 12,
+      paddingHorizontal: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    errorText: {
+      color: "#d32f2f",
+      textAlign: "center",
+      marginTop: 20,
     },
   });
 
-  // Dữ liệu giả cho phần bài viết liên quan
-  const relatedArticles = [
-    { id: 1, title: "Optimal nutrition for children aged 2-5" },
-    { id: 2, title: "Ideal timing for assessing child growth" },
-  ];
-
   return (
     <View style={styles.container}>
-      {/* ScrollView */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollViewContent}
@@ -152,60 +184,63 @@ export const BlogDetailedScreen = ({ route }) => {
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}>
-        {/* Blog Content */}
-        <View style={styles.contentSection}>
-          {/* Date */}
-          <Text style={styles.dateText}>{blogPost.date}</Text>
-
-          {/* Title */}
-          <Text style={styles.titleText}>{blogPost.title}</Text>
-
-          {/* Excerpt */}
-          <Text style={styles.excerptText}>{blogPost.excerpt}</Text>
-
-          {/* Full Content */}
-          <Text style={styles.contentText}>{blogPost.content}</Text>
-
-          {/* Divider */}
-          <Divider style={styles.divider} />
-
-          {/* Related Articles Section */}
-          <View style={styles.relatedArticlesSection}>
-            <Text style={styles.relatedArticlesTitle}>Related Articles</Text>
-            {relatedArticles.map((article) => (
-              <View key={article.id} style={styles.relatedArticleItem}>
-                <Icon
-                  name="book-open-outline"
-                  size={20}
-                  color={theme.colors.primary}
-                  style={styles.relatedArticleIcon}
-                />
-                <Text style={styles.relatedArticleText}>{article.title}</Text>
-                <Icon name="chevron-right" size={20} color="#ccc" />
-              </View>
-            ))}
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.errorText}>Loading post details...</Text>
           </View>
+        ) : error ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.errorText}>Error: {error}</Text>
+            <Button
+              mode="contained"
+              style={styles.ctaButton}
+              onPress={() => navigation.goBack()}
+              labelStyle={{ color: "white" }}>
+              Go Back
+            </Button>
+          </View>
+        ) : blogPost ? (
+          <View style={styles.contentSection}>
+            {/* Thumbnail */}
+            <Image
+              source={{ uri: blogPost.thumbnail }}
+              style={styles.thumbnail}
+            />
 
-          {/* Call to Action */}
-          <Card style={styles.ctaCard}>
-            <Card.Content style={styles.ctaContent}>
-              <View>
-                <Text style={styles.ctaTitle}>Want more parenting tips?</Text>
-                <Text style={styles.ctaText}>
-                  Explore our knowledge-sharing blog for more insights and
-                  advice.
-                </Text>
-              </View>
-              <Button
-                mode="contained"
-                style={styles.ctaButton}
-                labelStyle={{ color: "white" }}
-                onPress={() => {}}>
-                View All Blogs
-              </Button>
-            </Card.Content>
-          </Card>
-        </View>
+            {/* Date */}
+            <Text style={styles.dateText}>{blogPost.date}</Text>
+
+            {/* Title */}
+            <Text style={styles.titleText}>{blogPost.title}</Text>
+
+            {/* Full Content */}
+            <Text style={styles.contentText}>{blogPost.content}</Text>
+
+            {/* Divider */}
+            <Divider style={styles.divider} />
+
+            {/* Call to Action */}
+            <Card style={styles.ctaCard}>
+              <Card.Content style={styles.ctaContent}>
+                <View>
+                  <Text style={styles.ctaTitle}>Want more parenting tips?</Text>
+                  <Text style={styles.ctaText}>
+                    Explore our knowledge-sharing blog for more insights and
+                    advice.
+                  </Text>
+                </View>
+                <Button
+                  mode="contained"
+                  style={styles.ctaButton}
+                  labelStyle={{ color: "white" }}
+                  onPress={() => navigation.navigate("Blogs")}>
+                  View All Blogs
+                </Button>
+              </Card.Content>
+            </Card>
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );

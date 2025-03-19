@@ -7,7 +7,10 @@ export const fetchUserCredentials = createAsyncThunk(
   "auth/fetchUserCredentials",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${process.env.EXPO_LOCAL_API_URL}/auth/me`, { withCredentials: true });
+      const response = await axios.get(
+        `${process.env.EXPO_LOCAL_API_URL}/auth/me`,
+        { withCredentials: true }
+      );
       return response.data.user; // Return the user data
     } catch (error) {
       return rejectWithValue(error.response.data); // Handle errors
@@ -49,6 +52,8 @@ const authSlice = createSlice({
       .addCase(fetchUserCredentials.rejected, (state, action) => {
         state.error = action.payload;
         state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
       });
   },
 });

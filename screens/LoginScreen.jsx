@@ -26,8 +26,6 @@ const LoginScreen = () => {
   });
 
   const handleLogin = async (values, { setSubmitting, setErrors }) => {
-    console.log("hihi login nè");
-
     try {
       await api.post("/auth/login", values);
       dispatch(fetchUserCredentials());
@@ -56,7 +54,6 @@ const LoginScreen = () => {
           });
         }
       } else {
-        console.log("hihi login nè nhưng lỗi rồi");
         setErrors({ general: "Network error. Please check your connection." });
       }
     } finally {

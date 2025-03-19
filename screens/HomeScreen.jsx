@@ -30,8 +30,10 @@ const HomeScreen = () => {
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const [expandedFaqs, setExpandedFaqs] = useState({});
   const navigation = useNavigation();
-
   const [membershipPlans, setMembershipPlans] = useState([]);
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [blogLoading, setBlogLoading] = useState(true);
+  const [blogError, setBlogError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -41,14 +43,11 @@ const HomeScreen = () => {
         setLoading(true);
         const response = await api.get("/membership-packages");
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch membership plans");
+        if (!response.data || !response.data.packages) {
+          throw new Error("Invalid data format received from API");
         }
 
-        console.log(response);
-
-        const data = await response.json();
-        const mappedPlans = data.packages.map((plan) => ({
+        const mappedPlans = response.data.packages.map((plan) => ({
           id: plan._id,
           name: plan.name,
           price: `${plan.price.value.toLocaleString()} ${plan.price.unit}`,
@@ -60,10 +59,12 @@ const HomeScreen = () => {
             `Duration: ${plan.duration.value} ${plan.duration.unit}(s)`,
           ],
         }));
+
         setMembershipPlans(mappedPlans);
-        setLoading(false);
       } catch (err) {
-        setError(err.message);
+        console.error("Error fetching membership plans:", err);
+        setError(err.message || "Failed to fetch membership plans");
+      } finally {
         setLoading(false);
       }
     };
@@ -71,7 +72,46 @@ const HomeScreen = () => {
     fetchMembershipPlans();
   }, []);
 
-  // Toggle FAQ expansion
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        setBlogLoading(true);
+        const response = await api.get("/posts", {
+          params: {
+            page: 1,
+            size: 3,
+            sortBy: "date",
+            order: "descending",
+          },
+        });
+
+        if (!response.data || !response.data.posts) {
+          throw new Error("Invalid blog post data received from API");
+        }
+
+        const posts = response.data.posts.map((post) => ({
+          id: post._id,
+          title: post.title,
+          thumbnail: post.thumbnailUrl || null, // Ensure thumbnail is a string or null
+          date: new Date(post.createdAt).toLocaleDateString(),
+          excerpt:
+            post.content
+              .replace(/<[^>]+>/g, "") // Strip HTML tags
+              .substring(0, 60) + "..." || "No excerpt available", // Generate excerpt
+        }));
+
+        setBlogPosts(posts);
+      } catch (err) {
+        console.error("Error fetching blog posts:", err);
+        setBlogError(err.message || "Failed to fetch blog posts");
+      } finally {
+        setBlogLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
+
   const toggleFaq = (id) => {
     setExpandedFaqs((prev) => ({
       ...prev,
@@ -79,7 +119,6 @@ const HomeScreen = () => {
     }));
   };
 
-  // Feature highlights data
   const features = [
     {
       id: 1,
@@ -108,32 +147,6 @@ const HomeScreen = () => {
       description: "Manage growth profiles for multiple children in the family",
       icon: "account-multiple",
       color: "#9370DB",
-    },
-  ];
-
-  // Latest blog posts
-  const blogPosts = [
-    {
-      id: 1,
-      title: "5 child development signs to watch for",
-      thumbnail: bannerImage,
-      date: "03/10/2025",
-      excerpt:
-        "Early detection of abnormal signs helps with timely intervention...",
-    },
-    {
-      id: 2,
-      title: "Optimal nutrition for children aged 2-5",
-      thumbnail: bannerImage,
-      date: "03/05/2025",
-      excerpt: "Foods to add to ensure comprehensive development...",
-    },
-    {
-      id: 3,
-      title: "Ideal timing for assessing child growth",
-      thumbnail: bannerImage,
-      date: "03/01/2025",
-      excerpt: "Schedule for monitoring height and weight by stage...",
     },
   ];
 
@@ -266,23 +279,32 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {blogPosts.map((post) => (
-        <TouchableOpacity
-          key={post.id}
-          style={styles.blogItem}
-          onPress={() => {
-            navigation.navigate("BlogDetailed");
-          }}>
-          <Image source={post.thumbnail} style={styles.blogThumbnail} />
-          <View style={styles.blogContent}>
-            <Text style={styles.blogTitle}>{post.title}</Text>
-            <Text style={styles.blogExcerpt} numberOfLines={2}>
-              {post.excerpt}
-            </Text>
-            <Text style={styles.blogDate}>{post.date}</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+      {blogLoading ? (
+        <Text>Loading blog posts...</Text>
+      ) : blogError ? (
+        <Text style={{ color: "red" }}>Error: {blogError}</Text>
+      ) : (
+        blogPosts.map((post) => (
+          <TouchableOpacity
+            key={post.id}
+            style={styles.blogItem}
+            onPress={() => {
+              navigation.navigate("BlogDetailed", { postId: post.id });
+            }}>
+            <Image
+              source={{ uri: post.thumbnail }}
+              style={styles.blogThumbnail}
+            />
+            <View style={styles.blogContent}>
+              <Text style={styles.blogTitle}>{post.title}</Text>
+              <Text style={styles.blogExcerpt} numberOfLines={2}>
+                {post.excerpt}
+              </Text>
+              <Text style={styles.blogDate}>{post.date}</Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      )}
     </View>
   );
 
@@ -326,7 +348,7 @@ const HomeScreen = () => {
                 ))}
 
                 <Button
-                  mode={plan.price === "699,000 VND" ? "outlined" : "contained"} // Adjust logic based on cheapest plan
+                  mode={plan.price === "699,000 VND" ? "outlined" : "contained"}
                   style={styles.membershipButton}
                   labelStyle={{
                     color:
