@@ -11,7 +11,6 @@ import { useDispatch } from "react-redux";
 import { useSnackbar } from "../contexts/SnackbarContext";
 
 const SettingsScreen = () => {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const dispatch = useDispatch();
   const theme = useTheme();
   const [name] = useState("John Doe");
