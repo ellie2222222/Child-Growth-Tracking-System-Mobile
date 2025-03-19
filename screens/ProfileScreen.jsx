@@ -1,30 +1,92 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { useTheme, Avatar, Card, Divider } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import Text from "../components/Text"; // Giả sử bạn có component Text
-import Title from "../components/Title"; // Giả sử bạn có component Title
+import Text from "../components/Text";
+import Title from "../components/Title";
+import { useSelector } from "react-redux";
+import api from "../configs/api";
 
 export const ProfileScreen = () => {
+  const user = useSelector((state) => state.auth.user);
   const theme = useTheme();
-  const [userInfo] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    membershipPlan: "Free",
-    membershipFeatures: [
-      "Track 1 child",
-      "Basic charts",
-      "Monthly updates",
-      "Access to knowledge sharing blog",
-    ],
-  });
+  const [userInfo, setUserInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?._id) {
+        setError("User ID not found");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const userResponse = await api.get(`/users/${user._id}`, {
+          withCredentials: true,
+        });
+        const fetchedUser = userResponse.data.user;
+
+        const planResponse = await api.get(
+          `/membership-packages/${fetchedUser.subscription.currentPlan}`,
+          { withCredentials: true }
+        );
+        const fetchedPlan = planResponse.data.package;
+
+        const formattedUserInfo = {
+          name: fetchedUser.name,
+          email: fetchedUser.email,
+          phone: fetchedUser.phoneNumber,
+          avatar: fetchedUser.avatar || "https://i.pravatar.cc/300",
+          subscriptionDetails: {
+            startDate: fetchedUser.subscription.startDate,
+            endDate: fetchedUser.subscription.endDate,
+          },
+          membership: {
+            name: fetchedPlan.name,
+            description: fetchedPlan.description,
+            price: `${fetchedPlan.price.value.toLocaleString()} ${
+              fetchedPlan.price.unit
+            }`,
+            duration: `${
+              fetchedPlan.duration.value
+            } ${fetchedPlan.duration.unit.toLowerCase()}${
+              fetchedPlan.duration.value > 1 ? "s" : ""
+            }`,
+            features: [
+              { label: "Post Limit", value: fetchedPlan.postLimit },
+              {
+                label: "Update Child Data Limit",
+                value: fetchedPlan.updateChildDataLimit.toLocaleString(),
+              },
+              {
+                label: "Download Chart Limit",
+                value: fetchedPlan.downloadChart,
+              },
+            ],
+          },
+        };
+
+        setUserInfo(formattedUserInfo);
+      } catch (err) {
+        setError("Failed to fetch user or plan information");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user]);
 
   const renderUserInfo = () => (
     <View style={styles.userInfoSection}>
       <Avatar.Image
         size={120}
-        source={{ uri: "https://i.pravatar.cc/300" }}
+        source={{ uri: userInfo.avatar }}
         style={styles.avatar}
       />
       <Text variant="medium" style={styles.userName}>
@@ -48,12 +110,20 @@ export const ProfileScreen = () => {
         />
         <Divider style={styles.divider} />
         <Text variant="medium" style={styles.membershipName}>
-          {userInfo.membershipPlan}
+          {userInfo.membership.name}
         </Text>
-        {userInfo.membershipFeatures.map((feature, idx) => (
+        <Text style={styles.description}>
+          {userInfo.membership.description}
+        </Text>
+        <Text style={styles.priceDuration}>
+          Price: {userInfo.membership.price} / {userInfo.membership.duration}
+        </Text>
+        {userInfo.membership.features.map((feature, idx) => (
           <View key={idx} style={styles.featureItem}>
             <Icon name="check-circle" size={18} color={theme.colors.primary} />
-            <Text style={styles.featureText}>{feature}</Text>
+            <Text style={styles.featureText}>
+              {feature.label}: {feature.value}
+            </Text>
           </View>
         ))}
         <View style={styles.upgradeButton}>
@@ -65,6 +135,23 @@ export const ProfileScreen = () => {
       </Card.Content>
     </Card>
   );
+
+  // Xử lý trạng thái loading và error
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -94,7 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 25,
     marginBottom: 25,
-    elevation: 3, // Thêm bóng nhẹ cho hiệu ứng nổi
+    elevation: 3,
   },
   avatar: {
     marginBottom: 20,
@@ -130,6 +217,19 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "600",
     color: "#333",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  description: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  priceDuration: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#444",
     marginBottom: 20,
     textAlign: "center",
   },
@@ -153,5 +253,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginRight: 5,
+  },
+  loadingText: {
+    fontSize: 18,
+    textAlign: "center",
+    marginTop: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: "red",
+    textAlign: "center",
+    marginTop: 20,
   },
 });

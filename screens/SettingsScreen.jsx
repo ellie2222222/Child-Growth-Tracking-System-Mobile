@@ -11,11 +11,12 @@ import { useDispatch } from "react-redux";
 import { useSnackbar } from "../contexts/SnackbarContext";
 
 const SettingsScreen = () => {
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const dispatch = useDispatch();
   const theme = useTheme();
   const [name] = useState("John Doe");
   const [email] = useState("john@example.com");
   const navigation = useNavigation();
-  const dispatch = useDispatch();
   const { showSnackbar } = useSnackbar();
 
   const handleChangePassword = () => {
@@ -146,9 +147,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F6FA",
+    backgroundColor: "#F5F6FA",
   },
   scrollViewContent: {
     padding: 20,
+    paddingBottom: 40,
     paddingBottom: 40,
   },
   userInfoSection: {
@@ -159,6 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 20,
+    elevation: 3,
     elevation: 3,
   },
   avatar: {

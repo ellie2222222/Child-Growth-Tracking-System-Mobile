@@ -1,10 +1,11 @@
 import React from "react";
+import { View, ActivityIndicator } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ActivityIndicator, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 import HomeScreen from "../screens/HomeScreen";
@@ -21,6 +22,7 @@ import { ProfileScreen } from "../screens/ProfileScreen";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+// Reusable header and tab bar styles
 const getHeaderStyles = (theme) => ({
   headerStyle: { backgroundColor: theme.colors.primary },
   headerTitleStyle: { fontFamily: "GothamRnd-Medium", fontSize: 20 },
@@ -46,10 +48,10 @@ const getTabIcon = (route, focused, color, size) => {
   switch (route.name) {
     case "Home":
       return <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />;
-    case "SettingsTab":
-      return <Ionicons name={focused ? "settings" : "settings-outline"} size={size} color={color} />;
     case "Child":
       return <MaterialCommunityIcons name={focused ? "baby-face" : "baby-face-outline"} size={size} color={color} />;
+    case "Settings":
+      return <FontAwesome6 name="gear" size={size} color={color} />;
     case "Login":
       return <Ionicons name="log-in-outline" size={size} color={color} />;
     case "Signup":
@@ -59,6 +61,7 @@ const getTabIcon = (route, focused, color, size) => {
   }
 };
 
+// Stack Navigators
 const ChildStack = () => {
   const theme = useTheme();
   return (
@@ -95,13 +98,15 @@ const SettingsStack = () => {
   );
 };
 
+// Main Navigator
 const Navigator = ({ isAuthenticated, loading }) => {
   const theme = useTheme();
 
+  // Loading state
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
@@ -122,24 +127,13 @@ const Navigator = ({ isAuthenticated, loading }) => {
             <Tab.Screen
               name="Settings"
               component={SettingsStack}
-              options={{
-                headerShown: false,
-                tabBarIcon: ({ color, size }) => <FontAwesome6 name="gear" size={size} color={color} />,
-              }}
+              options={{ headerShown: false }}
             />
           </>
         ) : (
           <>
-            <Tab.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Tab.Screen
-              name="Signup"
-              component={SignupScreen}
-              options={{ headerShown: false }}
-            />
+            <Tab.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
           </>
         )}
       </Tab.Navigator>
