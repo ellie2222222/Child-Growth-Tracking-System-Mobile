@@ -18,10 +18,61 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Text from "../components/Text";
-import { format } from "date-fns";
 import { useSnackbar } from "../contexts/SnackbarContext";
 import Title from "../components/Title";
 import api from "../configs/api";
+import { MultipleSelectList, SelectList } from "react-native-dropdown-select-list";
+import { DatePickerInput, DatePickerModal, registerTranslation } from "react-native-paper-dates";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { format, parseISO } from "date-fns";
+
+registerTranslation("en", {
+  save: "Save",
+  selectSingle: "Select date",
+  selectMultiple: "Select dates",
+  selectRange: "Select period",
+  notAccordingToDateFormat: (inputFormat) =>
+    `Date format must be ${inputFormat}`,
+  mustBeHigherThan: (date) => `Must be later than ${date}`,
+  mustBeLowerThan: (date) => `Must be earlier than ${date}`,
+  mustBeBetween: (startDate, endDate) =>
+    `Must be between ${startDate} - ${endDate}`,
+  dateIsDisabled: "Day is not allowed",
+  previous: "Previous",
+  next: "Next",
+  typeInDate: "Type in date",
+  pickDateFromCalendar: "Pick date from calendar",
+  close: "Close",
+});
+
+const GenderEnum = {
+  BOY: 0,
+  GIRL: 1,
+};
+
+const AllergyEnum = {
+  NONE: "NONE",
+  N_A: "N/A",
+  DRUG_ALLERGY: "DRUG_ALLERGY",
+  FOOD_ALLERGY: "FOOD_ALLERGY",
+  LATEX_ALLERGY: "LATEX_ALLERGY",
+  MOLD_ALLERGY: "MOLD_ALLERGY",
+  PET_ALLERGY: "PET_ALLERGY",
+  POLLEN_ALLERGY: "POLLEN_ALLERGY",
+};
+
+const FeedingTypeEnum = {
+  N_A: "N/A",
+  BREASTFEEDING: "BREASTFEEDING",
+  FORMULA_FEEDING: "FORMULA_FEEDING",
+  SOLID_FOODS: "SOLID_FOODS",
+};
+
+const RelationshipEnum = {
+  PARENT: "Parent",
+  SIBLING: "Sibling",
+  GUARDIAN: "Guardian",
+};
 
 const getInitials = (name = "") =>
   name
@@ -36,21 +87,50 @@ const ChildScreen = () => {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
-
-  // Modal states
+  
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
-  // Selected child for update/delete
+  
   const [selectedChild, setSelectedChild] = useState(null);
-
-  // Form states
+  
   const [name, setName] = useState("");
+  const [note, setNote] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState(0);
+  const [feedingType, setFeedingType] = useState(FeedingTypeEnum.N_A);
+  const [allergies, setAllergies] = useState([]);
+  const [relationship, setRelationship] = useState(RelationshipEnum.PARENT);
   
+  const genderOptions = [
+    { key: GenderEnum.BOY, value: "Boy" },
+    { key: GenderEnum.GIRL, value: "Girl" },
+  ];
 
+  const feedingTypeOptions = [
+    { key: FeedingTypeEnum.N_A, value: "N/A" },
+    { key: FeedingTypeEnum.BREASTFEEDING, value: "Breastfeeding" },
+    { key: FeedingTypeEnum.FORMULA_FEEDING, value: "Formula Feeding" },
+    { key: FeedingTypeEnum.SOLID_FOODS, value: "Solid Foods" },
+  ];
+
+  const allergyOptions = [
+    { key: AllergyEnum.NONE, value: "NONE" },
+    { key: AllergyEnum.N_A, value: "N/A" },
+    { key: AllergyEnum.DRUG_ALLERGY, value: "DRUG_ALLERGY" },
+    { key: AllergyEnum.FOOD_ALLERGY, value: "FOOD_ALLERGY" },
+    { key: AllergyEnum.LATEX_ALLERGY, value: "LATEX_ALLERGY" },
+    { key: AllergyEnum.MOLD_ALLERGY, value: "MOLD_ALLERGY" },
+    { key: AllergyEnum.PET_ALLERGY, value: "PET_ALLERGY" },
+    { key: AllergyEnum.POLLEN_ALLERGY, value: "POLLEN_ALLERGY" },
+  ];
+
+  const relationshipOptions = [
+    { key: AllergyEnum.PARENT, value: "Parent" },
+    { key: AllergyEnum.SIBLING, value: "Sibling" },
+    { key: AllergyEnum.GUARDIAN, value: "Guardian" },
+  ];
+  
   const fetchChildren = async () => {
     setLoading(true);
     try {
@@ -74,47 +154,74 @@ const ChildScreen = () => {
     }, [])
   );
 
-  // Handle create child
   const handleCreateChild = async () => {
+    setLoading(true)
     try {
-      const response = await api.post("/children", { name, birthDate, gender });
-      setChildren([...children, response.data.child]);
-      setCreateModalVisible(false);
-      showSnackbar("Child created successfully!", 3000, "Close");
-    } catch (error) {
-      showSnackbar(
-        error.response?.data?.message || "Failed to create child. Please try again.",
-        5000,
-        "Close"
-      );
-    }
-  };
-
-  // Handle update child
-  const handleUpdateChild = async () => {
-    try {
-      const response = await api.put(`/children/${selectedChild._id}`, {
+      await api.post("/children", {
         name,
         birthDate,
         gender,
+        feedingType,
+        allergies,
+        relationship,
+        note
       });
-      const updatedChildren = children.map((child) =>
-        child._id === selectedChild._id ? response.data.child : child
-      );
-      setChildren(updatedChildren);
+      await fetchChildren();
+      setCreateModalVisible(false);
+      showSnackbar("Child created successfully!", 3000, "Close");
+    } catch (error) {
+      if (error.response) {
+        const { data } = error.response;
+        if (data.validationErrors && Array.isArray(data.validationErrors)) {
+          data.validationErrors.forEach((err) => {
+            showSnackbar(err.error || "Validation error occurred", 5000, "Close");
+          });
+        } else {
+          showSnackbar(
+            data.message || "Failed to create child. Please try again.",
+            5000,
+            "Close"
+          );
+        }
+      } else {
+        
+        showSnackbar("Network error. Please try again.", 5000, "Close");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  const handleUpdateChild = async () => {
+    setLoading(true)
+    try {
+      await api.put(`/children/${selectedChild._id}`, {
+        name,
+        birthDate,
+        gender,
+        feedingType,
+        allergies,
+        relationship,
+        note
+      });
+      await fetchChildren();
       setUpdateModalVisible(false);
-      showSnackbar("Child updated successfully!", 3000, "Close");
+      showSnackbar("Child updated successfully!", 5000, "Close");
     } catch (error) {
       showSnackbar(
         error.response?.data?.message || "Failed to update child. Please try again.",
         5000,
         "Close"
       );
+    } finally {
+      setLoading(false)
     }
   };
 
-  // Handle delete child
+  
   const handleDeleteChild = async () => {
+    setLoading(true)
     try {
       await api.delete(`/children/${selectedChild._id}`);
       const updatedChildren = children.filter(
@@ -122,24 +229,26 @@ const ChildScreen = () => {
       );
       setChildren(updatedChildren);
       setDeleteModalVisible(false);
-      showSnackbar("Child deleted successfully!", 3000, "Close");
+      showSnackbar("Child deleted successfully!", 5000, "Close");
     } catch (error) {
       showSnackbar(
         error.response?.data?.message || "Failed to delete child. Please try again.",
         5000,
         "Close"
       );
+    } finally {
+      setLoading(false)
     }
   };
 
-  // Render child item
+  
   const renderChildItem = ({ item }) => {
-    const formattedBirthDate = format(new Date(item.birthDate), "MMM d, yyyy");
+    const formattedBirthDate = format(parseISO(item.birthDate), "yyyy-MM-dd")
 
     return (
       <Card
         style={styles(theme).childContainer}
-        onPress={() => navigation.navigate("ChildDetails", { child: item })}
+        onPress={() => navigation.navigate("ChildDetails", { childId: item._id })}
       >
         <Card.Content style={{ flexDirection: "row", alignItems: "center" }}>
           <Avatar.Text
@@ -166,8 +275,11 @@ const ChildScreen = () => {
               onPress={() => {
                 setSelectedChild(item);
                 setName(item.name);
+                setNote(item.note);
                 setBirthDate(item.birthDate);
                 setGender(item.gender);
+                setFeedingType(item.feedingType);
+                setAllergies([]);
                 setUpdateModalVisible(true);
               }}
             >
@@ -197,6 +309,7 @@ const ChildScreen = () => {
             size="large"
             color={theme.colors.primary}
           />
+          <Text style={{ color: theme.colors.primary }}>Loading...</Text>
         </View>
       ) : (
         <FlatList
@@ -224,23 +337,72 @@ const ChildScreen = () => {
               style={styles(theme).input}
             />
             <TextInput
-              label="Birth Date"
-              value={birthDate}
-              onChangeText={setBirthDate}
+              label="Note"
+              value={note}
+              onChangeText={setNote}
+              multiline
+              numberOfLines={4}
               style={styles(theme).input}
             />
-            <TextInput
-              label="Gender"
-              value={gender}
-              onChangeText={setGender}
-              style={styles(theme).input}
+            <SelectList
+              setSelected={(val) => setGender(val)}
+              data={genderOptions}
+              save="key"
+              placeholder="Select Gender"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
             />
-            <View style={styles(theme).modalButtons}>
+            <SelectList
+              setSelected={(val) => setFeedingType(val)}
+              data={feedingTypeOptions}
+              save="key"
+              placeholder="Select Feeding Type"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
+            />
+            <SelectList
+              setSelected={(val) => setRelationship(val)}
+              data={relationshipOptions}
+              save="key"
+              placeholder="Select Relationship"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
+            />
+            <MultipleSelectList
+              setSelected={(val) => setAllergies(val)} 
+              data={allergyOptions}
+              save="value"
+              placeholder="Select Allergies"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
+              onSelect={() => console.log("press")}
+            />     
+            
+            <SafeAreaProvider>
+              <View style={{ marginTop: 16 }}>
+                <DatePickerInput
+                  locale="en"
+                  label="Birth Date"
+                  value={birthDate}
+                  onChange={(date) => setBirthDate(date)}
+                  inputMode="start"
+                  mode="outlined"
+                  dateFormat="yyyy-MM-dd"
+                />
+              </View>
+            </SafeAreaProvider>
+            
+            <View style={[styles(theme).modalButtons, { marginTop: 60 }]}>
               <Button
                 mode="contained"
                 onPress={handleCreateChild}
                 style={styles(theme).button}
                 textColor="white"
+                disabled={loading}
               >
                 Save
               </Button>
@@ -273,23 +435,64 @@ const ChildScreen = () => {
               style={styles(theme).input}
             />
             <TextInput
-              label="Birth Date"
-              value={birthDate}
-              onChangeText={setBirthDate}
+              label="Note"
+              value={note}
+              onChangeText={setNote}
+              multiline
+              numberOfLines={4}
               style={styles(theme).input}
             />
-            <TextInput
-              label="Gender"
-              value={gender}
-              onChangeText={setGender}
-              style={styles(theme).input}
+            <SelectList
+              setSelected={(val) => setGender(val)}
+              data={genderOptions}
+              save="key"
+              placeholder="Select Gender"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
             />
-            <View style={styles(theme).modalButtons}>
+            <SelectList
+              setSelected={(val) => setFeedingType(val)}
+              data={feedingTypeOptions}
+              save="key"
+              placeholder="Select Feeding Type"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
+            />
+            <MultipleSelectList
+              setSelected={(val) => setAllergies(val)} 
+              data={allergyOptions}
+              save="value"
+              placeholder="Select Allergies"
+              search={false}
+              boxStyles={styles(theme).dropdownBox}
+              dropdownStyles={styles(theme).dropdown}
+              onSelect={() => console.log("press")}
+            />
+
+            <SafeAreaProvider>
+              <View style={{ marginTop: 30 }}>
+                <DatePickerInput
+                  withModal
+                  locale="en"
+                  label="Birth Date"
+                  onChange={(date) => setBirthDate(date)}
+                  inputMode="start"
+                  mode="single"
+                  dateFormat="yyyy-MM-dd"
+                  style={styles(theme).input}
+                />
+              </View>
+            </SafeAreaProvider>
+            
+            <View style={[styles(theme).modalButtons, {marginTop: 60}]}>
               <Button
                 mode="contained"
                 onPress={handleUpdateChild}
                 style={styles(theme).button}
                 textColor="white"
+                disabled={loading}
               >
                 Update
               </Button>
@@ -327,6 +530,7 @@ const ChildScreen = () => {
                 onPress={handleDeleteChild}
                 style={[styles(theme).button, { backgroundColor: theme.colors.primary }]}
                 textColor="white"
+                disabled={loading}
               >
                 Delete
               </Button>
@@ -349,8 +553,11 @@ const ChildScreen = () => {
         color="white"
         onPress={() => {
           setName("");
+          setNote("");
           setBirthDate("");
-          setGender("");
+          setGender(0);
+          setFeedingType(FeedingTypeEnum.N_A);
+          setAllergies([]);
           setCreateModalVisible(true);
         }}
       />
@@ -419,6 +626,9 @@ const styles = (theme) =>
       backgroundColor: "white",
       borderRadius: 10,
       padding: 20,
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 5
     },
     input: {
       marginBottom: 16,
@@ -426,6 +636,36 @@ const styles = (theme) =>
       borderColor: "black",
       borderStyle: "solid",
       borderRadius: 4,
+    },
+    dropdownBox: {
+      borderWidth: 1,
+      borderColor: "black",
+      borderRadius: 4,
+      marginBottom: 16,
+    },
+    dropdown: {
+      borderWidth: 1,
+      borderColor: "black",
+      borderRadius: 4,
+    },
+    chipContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      marginBottom: 16,
+    },
+    chip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.primary,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      marginRight: 5,
+      marginBottom: 5,
+    },
+    chipText: {
+      color: "white",
+      marginRight: 5,
     },
     modalButtons: {
       flexDirection: "row",

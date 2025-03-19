@@ -1,39 +1,60 @@
-import React, { useEffect, useState } from "react";
-import { Image, ScrollView, View, StyleSheet, Dimensions } from "react-native";
-import { Avatar, Divider, useTheme } from "react-native-paper";
+import React, { useCallback, useEffect, useState } from "react";
+import { Image, ScrollView, View, StyleSheet } from "react-native";
+import { ActivityIndicator, Avatar, Divider, useTheme } from "react-native-paper";
 import { LineChart } from "react-native-chart-kit";
 import Title from "../components/Title";
 import Text from "../components/Text";
 import { format } from "date-fns";
 import api from "../configs/api";
+import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { useSnackbar } from "../contexts/SnackbarContext";
 
 const ChildDetails = () => {
   const theme = useTheme();
   const [child, setChild] = useState(null);
   const [loading, setLoading] = useState(false);
+  const route = useRoute();
+  const { childId } = route.params;
+  const { showSnackbar } = useSnackbar();
 
   const fetchChild = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/children");
-      setChild(response.data.children[0]); // Assuming the API returns an array of children
+      const response = await api.get(`/children/${childId}`);
+      setChild(response.data.child);
     } catch (error) {
       console.error("Failed to fetch child data:", error);
+      showSnackbar(
+        data.message || "Failed to fetch child data. Please try again.",
+        5000,
+        "Close"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchChild();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchChild();
+    }, [childId])
+  );
 
   if (loading) {
-    return <Text>Loading...</Text>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.text, { color: theme.colors.primary }]}>Loading...</Text>
+      </View>
+    );
   }
 
   if (!child) {
-    return <Text>No child data found.</Text>;
+    return (
+      <View style={styles.centered}>
+        <Text style={[styles.text, { color: theme.colors.error }]}>No child data found.</Text>
+      </View>
+    )
   }
 
   const formattedBirthDate = format(new Date(child.birthDate), "MMM d, yyyy");
@@ -65,7 +86,21 @@ const ChildDetails = () => {
           <View style={styles.gridRow}>
             <Text variant="medium" style={styles.gridLabel}>Allergies</Text>
             <Text style={styles.gridValue}>
-              {child.allergies?.join(", ") || "N/A"}
+            <View>
+              {child.allergies && child.allergies.length > 0 ? (
+                child.allergies.map((allergy, index) => (
+                  <Text key={index} style={styles.gridValue}>
+                    {allergy === "NONE"
+                      ? "None"
+                      : allergy === "N/A"
+                      ? "N/A"
+                      : allergy.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </Text>
+                ))
+              ) : (
+                <Text style={styles.gridValue}>N/A</Text>
+              )}
+            </View>
             </Text>
           </View>
         </View>
@@ -131,5 +166,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     lineHeight: 24,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  text: {
+    fontSize: 18,
+    marginBottom: 5,
   },
 });

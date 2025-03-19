@@ -1,19 +1,26 @@
-// authSlice.jsx
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios"; // Use axios directly instead of importing api
+import api from "../configs/api";
 
-// Async Thunk for fetching user credentials
 export const fetchUserCredentials = createAsyncThunk(
   "auth/fetchUserCredentials",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${process.env.EXPO_LOCAL_API_URL}/auth/me`,
-        { withCredentials: true }
-      );
-      return response.data.user; // Return the user data
+      const response = await api.get(`/auth/me`);
+      return response.data.user; 
     } catch (error) {
-      return rejectWithValue(error.response.data); // Handle errors
+      return rejectWithValue(error.response?.data || "Failed to fetch user");
+    }
+  }
+);
+
+export const logout = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      await api.post(`/auth/logout`);
+      return null; 
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Logout failed");
     }
   }
 );
@@ -28,35 +35,40 @@ const initialState = {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
-      state.error = null;
-    },
-  },
+  reducers: {}, 
   extraReducers: (builder) => {
     builder
-      // Handle pending state
+      
       .addCase(fetchUserCredentials.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      // Handle fulfilled state
       .addCase(fetchUserCredentials.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
         state.loading = false;
       })
-      // Handle rejected state
       .addCase(fetchUserCredentials.rejected, (state, action) => {
         state.error = action.payload;
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
+      })
+      
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(logout.rejected, (state, action) => {
+        state.error = action.payload;
       });
   },
 });
 
-export const { logout } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,17 +1,22 @@
 import React, { useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { Avatar, Divider, useTheme } from "react-native-paper";
+import { Avatar, useTheme } from "react-native-paper";
 import { FontAwesome6 } from "@expo/vector-icons";
 import Text from "../components/Text";
 import Title from "../components/Title";
 import Button from "../components/Button";
 import { useNavigation } from "@react-navigation/native";
+import { logout } from "../features/authSlice";
+import { useDispatch } from "react-redux";
+import { useSnackbar } from "../contexts/SnackbarContext";
 
 const SettingsScreen = () => {
   const theme = useTheme();
   const [name] = useState("John Doe");
   const [email] = useState("john@example.com");
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const { showSnackbar } = useSnackbar();
 
   const handleChangePassword = () => {
     console.log("Change Password pressed");
@@ -39,7 +44,13 @@ const SettingsScreen = () => {
 
         {/* Your Data Section */}
         <View style={styles.section}>
-          <Title text="Profile" style={styles.sectionTitle} />
+          <Title
+            text="Profile"
+            style={[
+              styles.sectionTitle,
+              { fontFamily: theme.fonts.medium.fontFamily },
+            ]}
+          />
           <Button
             variant="text"
             textVariant="regular"
@@ -56,7 +67,13 @@ const SettingsScreen = () => {
 
         {/* Security Section (Change Password) */}
         <View style={styles.section}>
-          <Title text="Privacy" style={styles.sectionTitle} />
+          <Title
+            text="Privacy"
+            style={[
+              styles.sectionTitle,
+              { fontFamily: theme.fonts.medium.fontFamily },
+            ]}
+          />
           <Button
             variant="text"
             textVariant="regular"
@@ -67,7 +84,13 @@ const SettingsScreen = () => {
 
         {/* Support Section */}
         <View style={styles.section}>
-          <Title text="Support" style={styles.sectionTitle} />
+          <Title
+            text="Support"
+            style={[
+              styles.sectionTitle,
+              { fontFamily: theme.fonts.medium.fontFamily },
+            ]}
+          />
           <Button
             variant="text"
             textVariant="regular"
@@ -80,6 +103,7 @@ const SettingsScreen = () => {
             title="Contact Support"
             onPress={() => console.log("Contact Support")}
           />
+
           <View style={styles.socialIcons}>
             <FontAwesome6
               name="facebook-f"
@@ -103,6 +127,16 @@ const SettingsScreen = () => {
             />
           </View>
         </View>
+
+        <Button
+          variant="contained"
+          title="Log Out"
+          onPress={async () => {
+            await dispatch(logout()).unwrap();
+            showSnackbar("Logout success", 5000, "Close");
+          }}
+          style={styles.logoutButton}
+        />
       </ScrollView>
     </View>
   );
@@ -111,11 +145,11 @@ const SettingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F6FA", // Màu nền nhẹ nhàng
+    backgroundColor: "#F5F6FA",
   },
   scrollViewContent: {
     padding: 20,
-    paddingBottom: 40, // Đệm dưới để nội dung không bị che khuất
+    paddingBottom: 40,
   },
   userInfoSection: {
     backgroundColor: "#FFFFFF",
@@ -125,7 +159,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 20,
-    elevation: 3, // Hiệu ứng bóng nhẹ
+    elevation: 3,
   },
   avatar: {
     marginRight: 15,

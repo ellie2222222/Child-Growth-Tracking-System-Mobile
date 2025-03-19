@@ -13,8 +13,7 @@ SplashScreen.preventAutoHideAsync();
 
 const AuthWrapper = () => {
   const dispatch = useDispatch();
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  const loading = useSelector((state) => state.auth.loading);
+  const { isAuthenticated, user, loading, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(fetchUserCredentials());
@@ -24,7 +23,7 @@ const AuthWrapper = () => {
     return null;
   }
 
-  return <Navigator isAuthenticated={isAuthenticated} />;
+  return <Navigator isAuthenticated={isAuthenticated} user={user} loading={loading} error={error} />;
 };
 
 export default function App() {
@@ -53,8 +52,10 @@ export default function App() {
       light: { fontFamily: "GothamRnd-Light", fontWeight: "300" },
       regular: { fontFamily: "GothamRnd-Regular", fontWeight: "500" },
       medium: { fontFamily: "GothamRnd-Medium", fontWeight: "600" },
-      titleMedium: { fontFamily: "GothamRnd-Medium", fontWeight: "600" },
       bold: { fontFamily: "GothamRnd-Bold", fontWeight: "700" },
+      titleSmall: { fontFamily: "GothamRnd-Medium", fontWeight: "300" },
+      titleMedium: { fontFamily: "GothamRnd-Medium", fontWeight: "600" },
+      titleLarge: { fontFamily: "GothamRnd-Medium", fontWeight: "700" },
       bodySmall: { fontFamily: "GothamRnd-Medium", fontWeight: "400" },
       bodyMedium: { fontFamily: "GothamRnd-Medium", fontWeight: "400" },
       bodyLarge: { fontFamily: "GothamRnd-Medium", fontWeight: "500" },
