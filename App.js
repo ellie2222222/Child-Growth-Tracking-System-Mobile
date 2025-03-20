@@ -47,6 +47,8 @@ export default function App() {
       secondary: "#f4d8ce",
       lightWhite: "#f9f7f5",
       error: "red",
+      background: "white",
+      text: "black"
     },
     fonts: {
       light: { fontFamily: "GothamRnd-Light", fontWeight: "300" },

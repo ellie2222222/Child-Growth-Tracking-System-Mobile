@@ -18,6 +18,7 @@ import BlogsScreen from "../screens/Blog/BlogsScreen";
 import { BlogDetailedScreen } from "../screens/Blog/BlogDetailedScreen";
 import { FAQsScreen } from "../screens/FAQ/FAQsScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
+import GrowthDataDetailsScreen from "../screens/GrowthDataDetailsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -68,6 +69,11 @@ const ChildStack = () => {
     <Stack.Navigator screenOptions={getHeaderStyles(theme)}>
       <Stack.Screen name="ChildTab" component={ChildScreen} options={{ title: "Child" }} />
       <Stack.Screen name="ChildDetails" component={ChildDetailsScreen} options={{ title: "Child Details" }} />
+      <Stack.Screen
+        name="GrowthDataDetails"
+        component={GrowthDataDetailsScreen}
+        options={{ title: "Growth Data Details" }}
+      />
     </Stack.Navigator>
   );
 };

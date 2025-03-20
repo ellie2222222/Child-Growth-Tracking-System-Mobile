@@ -22,21 +22,21 @@ import { useSnackbar } from "../contexts/SnackbarContext";
 import Title from "../components/Title";
 import api from "../configs/api";
 import { MultipleSelectList, SelectList } from "react-native-dropdown-select-list";
-import { DatePickerInput, DatePickerModal, registerTranslation } from "react-native-paper-dates";
+import { DatePickerInput, registerTranslation } from "react-native-paper-dates";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { format, parseISO } from "date-fns";
+import { Formik } from "formik";
+import * as Yup from "yup";
 
 registerTranslation("en", {
   save: "Save",
   selectSingle: "Select date",
   selectMultiple: "Select dates",
   selectRange: "Select period",
-  notAccordingToDateFormat: (inputFormat) =>
-    `Date format must be ${inputFormat}`,
+  notAccordingToDateFormat: (inputFormat) => `Date format must be ${inputFormat}`,
   mustBeHigherThan: (date) => `Must be later than ${date}`,
   mustBeLowerThan: (date) => `Must be earlier than ${date}`,
-  mustBeBetween: (startDate, endDate) =>
-    `Must be between ${startDate} - ${endDate}`,
+  mustBeBetween: (startDate, endDate) => `Must be between ${startDate} - ${endDate}`,
   dateIsDisabled: "Day is not allowed",
   previous: "Previous",
   next: "Next",
@@ -69,10 +69,31 @@ const FeedingTypeEnum = {
 };
 
 const RelationshipEnum = {
-  PARENT: "Parent",
-  SIBLING: "Sibling",
-  GUARDIAN: "Guardian",
+  PARENT: "PARENT",
+  SIBLING: "SIBLING",
+  GUARDIAN: "GUARDIAN",
 };
+
+// Yup Validation Schema
+const ChildSchema = Yup.object().shape({
+  name: Yup.string().required("Name is required"),
+  birthDate: Yup.date()
+    .required("Birth date is required")
+    .max(new Date(), "Birth date cannot be in the future"),
+  gender: Yup.number()
+    .oneOf([GenderEnum.BOY, GenderEnum.GIRL], "Invalid gender")
+    .required("Gender is required"),
+  feedingType: Yup.string()
+    .oneOf(Object.values(FeedingTypeEnum), "Invalid feeding type")
+    .required("Feeding type is required"),
+  allergies: Yup.array()
+    .of(Yup.string().oneOf(Object.values(AllergyEnum), "Invalid allergy"))
+    .min(0, "Select at least one allergy or NONE/N_A"),
+  relationship: Yup.string()
+    .oneOf(Object.values(RelationshipEnum), "Invalid relationship")
+    .required("Relationship is required"),
+  note: Yup.string(),
+});
 
 const getInitials = (name = "") =>
   name
@@ -87,21 +108,13 @@ const ChildScreen = () => {
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
   const { showSnackbar } = useSnackbar();
-  
+
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  
+
   const [selectedChild, setSelectedChild] = useState(null);
-  
-  const [name, setName] = useState("");
-  const [note, setNote] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [gender, setGender] = useState(0);
-  const [feedingType, setFeedingType] = useState(FeedingTypeEnum.N_A);
-  const [allergies, setAllergies] = useState([]);
-  const [relationship, setRelationship] = useState(RelationshipEnum.PARENT);
-  
+
   const genderOptions = [
     { key: GenderEnum.BOY, value: "Boy" },
     { key: GenderEnum.GIRL, value: "Girl" },
@@ -126,11 +139,11 @@ const ChildScreen = () => {
   ];
 
   const relationshipOptions = [
-    { key: AllergyEnum.PARENT, value: "Parent" },
-    { key: AllergyEnum.SIBLING, value: "Sibling" },
-    { key: AllergyEnum.GUARDIAN, value: "Guardian" },
+    { key: RelationshipEnum.PARENT, value: "Parent" },
+    { key: RelationshipEnum.SIBLING, value: "Sibling" },
+    { key: RelationshipEnum.GUARDIAN, value: "Guardian" },
   ];
-  
+
   const fetchChildren = async () => {
     setLoading(true);
     try {
@@ -138,8 +151,7 @@ const ChildScreen = () => {
       setChildren(response.data.children);
     } catch (error) {
       showSnackbar(
-        error.response?.data?.message ||
-          "Failed to load children. Please try again.",
+        error.response?.data?.message || "Failed to load children. Please try again.",
         5000,
         "Close"
       );
@@ -154,17 +166,12 @@ const ChildScreen = () => {
     }, [])
   );
 
-  const handleCreateChild = async () => {
-    setLoading(true)
+  const handleCreateChild = async (values) => {
+    setLoading(true);
     try {
       await api.post("/children", {
-        name,
-        birthDate,
-        gender,
-        feedingType,
-        allergies,
-        relationship,
-        note
+        ...values,
+        birthDate: format(values.birthDate, "yyyy-MM-dd"),
       });
       await fetchChildren();
       setCreateModalVisible(false);
@@ -184,7 +191,6 @@ const ChildScreen = () => {
           );
         }
       } else {
-        
         showSnackbar("Network error. Please try again.", 5000, "Close");
       }
     } finally {
@@ -192,18 +198,12 @@ const ChildScreen = () => {
     }
   };
 
-  
-  const handleUpdateChild = async () => {
-    setLoading(true)
+  const handleUpdateChild = async (values) => {
+    setLoading(true);
     try {
       await api.put(`/children/${selectedChild._id}`, {
-        name,
-        birthDate,
-        gender,
-        feedingType,
-        allergies,
-        relationship,
-        note
+        ...values,
+        birthDate: format(values.birthDate, "yyyy-MM-dd"),
       });
       await fetchChildren();
       setUpdateModalVisible(false);
@@ -215,13 +215,12 @@ const ChildScreen = () => {
         "Close"
       );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
-  
   const handleDeleteChild = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       await api.delete(`/children/${selectedChild._id}`);
       const updatedChildren = children.filter(
@@ -237,13 +236,12 @@ const ChildScreen = () => {
         "Close"
       );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
-  
   const renderChildItem = ({ item }) => {
-    const formattedBirthDate = format(parseISO(item.birthDate), "yyyy-MM-dd")
+    const formattedBirthDate = format(parseISO(item.birthDate), "yyyy-MM-dd");
 
     return (
       <Card
@@ -265,7 +263,7 @@ const ChildScreen = () => {
                 {formattedBirthDate}
               </Text>
               <Icon
-                name={item.gender === "male" ? "male" : "female"}
+                name={item.gender === GenderEnum.BOY ? "male" : "female"}
                 size={20}
               />
             </View>
@@ -274,12 +272,6 @@ const ChildScreen = () => {
             <TouchableOpacity
               onPress={() => {
                 setSelectedChild(item);
-                setName(item.name);
-                setNote(item.note);
-                setBirthDate(item.birthDate);
-                setGender(item.gender);
-                setFeedingType(item.feedingType);
-                setAllergies([]);
                 setUpdateModalVisible(true);
               }}
             >
@@ -327,95 +319,151 @@ const ChildScreen = () => {
         animationType="slide"
         onRequestClose={() => setCreateModalVisible(false)}
       >
-        <View style={styles(theme).modalContainer}>
-          <View style={styles(theme).modalContent}>
-            <Title text="Add Child" style={{ fontSize: 20, marginBottom: 20 }} />
-            <TextInput
-              label="Name"
-              value={name}
-              onChangeText={setName}
-              style={styles(theme).input}
-            />
-            <TextInput
-              label="Note"
-              value={note}
-              onChangeText={setNote}
-              multiline
-              numberOfLines={4}
-              style={styles(theme).input}
-            />
-            <SelectList
-              setSelected={(val) => setGender(val)}
-              data={genderOptions}
-              save="key"
-              placeholder="Select Gender"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-            />
-            <SelectList
-              setSelected={(val) => setFeedingType(val)}
-              data={feedingTypeOptions}
-              save="key"
-              placeholder="Select Feeding Type"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-            />
-            <SelectList
-              setSelected={(val) => setRelationship(val)}
-              data={relationshipOptions}
-              save="key"
-              placeholder="Select Relationship"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-            />
-            <MultipleSelectList
-              setSelected={(val) => setAllergies(val)} 
-              data={allergyOptions}
-              save="value"
-              placeholder="Select Allergies"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-              onSelect={() => console.log("press")}
-            />     
-            
-            <SafeAreaProvider>
-              <View style={{ marginTop: 16 }}>
-                <DatePickerInput
-                  locale="en"
-                  label="Birth Date"
-                  value={birthDate}
-                  onChange={(date) => setBirthDate(date)}
-                  inputMode="start"
-                  mode="outlined"
-                  dateFormat="yyyy-MM-dd"
-                />
-              </View>
-            </SafeAreaProvider>
-            
-            <View style={[styles(theme).modalButtons, { marginTop: 60 }]}>
-              <Button
-                mode="contained"
-                onPress={handleCreateChild}
-                style={styles(theme).button}
-                textColor="white"
-                disabled={loading}
+        <SafeAreaProvider>
+          <View style={styles(theme).modalContainer}>
+            <View style={styles(theme).modalContent}>
+              <Title text="Add Child" style={{ fontSize: 20, marginBottom: 20 }} />
+              <Formik
+                initialValues={{
+                  name: "",
+                  note: "",
+                  birthDate: new Date(),
+                  gender: GenderEnum.BOY,
+                  feedingType: FeedingTypeEnum.N_A,
+                  allergies: [],
+                  relationship: RelationshipEnum.PARENT,
+                }}
+                validationSchema={ChildSchema}
+                onSubmit={handleCreateChild}
               >
-                Save
-              </Button>
-              <Button
-                mode="outlined"
-                onPress={() => setCreateModalVisible(false)}
-                style={styles(theme).button}
-              >
-                Cancel
-              </Button>
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  setFieldValue,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View>
+                    <TextInput
+                      label="Name"
+                      value={values.name}
+                      onChangeText={handleChange("name")}
+                      onBlur={handleBlur("name")}
+                      style={styles(theme).input}
+                      error={touched.name && !!errors.name}
+                    />
+                    {touched.name && errors.name && (
+                      <Text style={styles(theme).errorText}>{errors.name}</Text>
+                    )}
+
+                    <TextInput
+                      label="Note"
+                      value={values.note}
+                      onChangeText={handleChange("note")}
+                      onBlur={handleBlur("note")}
+                      multiline
+                      numberOfLines={4}
+                      style={styles(theme).input}
+                      error={touched.note && !!errors.note}
+                    />
+                    {touched.note && errors.note && (
+                      <Text style={styles(theme).errorText}>{errors.note}</Text>
+                    )}
+
+                    <SelectList
+                      setSelected={(val) => setFieldValue("gender", val)}
+                      data={genderOptions}
+                      save="key"
+                      placeholder="Select Gender"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOption={{ key: values.gender, value: genderOptions.find(g => g.key === values.gender)?.value }}
+                    />
+                    {touched.gender && errors.gender && (
+                      <Text style={styles(theme).errorText}>{errors.gender}</Text>
+                    )}
+
+                    <SelectList
+                      setSelected={(val) => setFieldValue("feedingType", val)}
+                      data={feedingTypeOptions}
+                      save="key"
+                      placeholder="Select Feeding Type"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOption={{ key: values.feedingType, value: feedingTypeOptions.find(f => f.key === values.feedingType)?.value }}
+                    />
+                    {touched.feedingType && errors.feedingType && (
+                      <Text style={styles(theme).errorText}>{errors.feedingType}</Text>
+                    )}
+
+                    <SelectList
+                      setSelected={(val) => setFieldValue("relationship", val)}
+                      data={relationshipOptions}
+                      save="key"
+                      placeholder="Select Relationship"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOption={{ key: values.relationship, value: relationshipOptions.find(r => r.key === values.relationship)?.value }}
+                    />
+                    {touched.relationship && errors.relationship && (
+                      <Text style={styles(theme).errorText}>{errors.relationship}</Text>
+                    )}
+
+                    <MultipleSelectList
+                      setSelected={(val) => setFieldValue("allergies", val)}
+                      data={allergyOptions}
+                      save="value"
+                      placeholder="Select Allergies"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOptions={allergyOptions.filter(opt => values.allergies.includes(opt.value))}
+                    />
+                    {touched.allergies && errors.allergies && (
+                      <Text style={styles(theme).errorText}>{errors.allergies}</Text>
+                    )}
+
+                    <DatePickerInput
+                      locale="en"
+                      label="Birth Date"
+                      value={values.birthDate}
+                      onChange={(date) => setFieldValue("birthDate", date)}
+                      inputMode="start"
+                      style={[styles(theme).input, {marginTop: 60}]}
+                    />
+                    {touched.birthDate && errors.birthDate && (
+                      <Text style={styles(theme).errorText}>{errors.birthDate}</Text>
+                    )}
+
+                    <View style={[styles(theme).modalButtons, { marginTop: 60 }]}>
+                      <Button
+                        mode="contained"
+                        onPress={handleSubmit}
+                        style={styles(theme).button}
+                        textColor="white"
+                        disabled={loading}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        mode="outlined"
+                        onPress={() => setCreateModalVisible(false)}
+                        style={styles(theme).button}
+                      >
+                        Cancel
+                      </Button>
+                    </View>
+                  </View>
+                )}
+              </Formik>
             </View>
           </View>
-        </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Update Modal */}
@@ -425,87 +473,152 @@ const ChildScreen = () => {
         animationType="slide"
         onRequestClose={() => setUpdateModalVisible(false)}
       >
-        <View style={styles(theme).modalContainer}>
-          <View style={styles(theme).modalContent}>
-            <Title text="Edit Child" style={{ fontSize: 20, marginBottom: 20 }} />
-            <TextInput
-              label="Name"
-              value={name}
-              onChangeText={setName}
-              style={styles(theme).input}
-            />
-            <TextInput
-              label="Note"
-              value={note}
-              onChangeText={setNote}
-              multiline
-              numberOfLines={4}
-              style={styles(theme).input}
-            />
-            <SelectList
-              setSelected={(val) => setGender(val)}
-              data={genderOptions}
-              save="key"
-              placeholder="Select Gender"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-            />
-            <SelectList
-              setSelected={(val) => setFeedingType(val)}
-              data={feedingTypeOptions}
-              save="key"
-              placeholder="Select Feeding Type"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-            />
-            <MultipleSelectList
-              setSelected={(val) => setAllergies(val)} 
-              data={allergyOptions}
-              save="value"
-              placeholder="Select Allergies"
-              search={false}
-              boxStyles={styles(theme).dropdownBox}
-              dropdownStyles={styles(theme).dropdown}
-              onSelect={() => console.log("press")}
-            />
+        <SafeAreaProvider>
+          <View style={styles(theme).modalContainer}>
+            <View style={styles(theme).modalContent}>
+              <Title text="Edit Child" style={{ fontSize: 20, marginBottom: 20 }} />
+              <Formik
+                initialValues={{
+                  name: selectedChild?.name || "",
+                  note: selectedChild?.note || "",
+                  birthDate: selectedChild?.birthDate ? parseISO(selectedChild.birthDate) : new Date(),
+                  gender: selectedChild?.gender ?? GenderEnum.BOY,
+                  feedingType: selectedChild?.feedingType || FeedingTypeEnum.N_A,
+                  allergies: selectedChild?.allergies || [],
+                  relationship: selectedChild?.relationship || RelationshipEnum.PARENT,
+                }}
+                validationSchema={ChildSchema}
+                onSubmit={handleUpdateChild}
+                enableReinitialize // Ensures form updates when selectedChild changes
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  setFieldValue,
+                  values,
+                  errors,
+                  touched,
+                }) => (
+                  <View>
+                    <TextInput
+                      label="Name"
+                      value={values.name}
+                      onChangeText={handleChange("name")}
+                      onBlur={handleBlur("name")}
+                      style={styles(theme).input}
+                      error={touched.name && !!errors.name}
+                    />
+                    {touched.name && errors.name && (
+                      <Text style={styles(theme).errorText}>{errors.name}</Text>
+                    )}
 
-            <SafeAreaProvider>
-              <View style={{ marginTop: 30 }}>
-                <DatePickerInput
-                  withModal
-                  locale="en"
-                  label="Birth Date"
-                  onChange={(date) => setBirthDate(date)}
-                  inputMode="start"
-                  mode="single"
-                  dateFormat="yyyy-MM-dd"
-                  style={styles(theme).input}
-                />
-              </View>
-            </SafeAreaProvider>
-            
-            <View style={[styles(theme).modalButtons, {marginTop: 60}]}>
-              <Button
-                mode="contained"
-                onPress={handleUpdateChild}
-                style={styles(theme).button}
-                textColor="white"
-                disabled={loading}
-              >
-                Update
-              </Button>
-              <Button
-                mode="outlined"
-                onPress={() => setUpdateModalVisible(false)}
-                style={styles(theme).button}
-              >
-                Cancel
-              </Button>
+                    <TextInput
+                      label="Note"
+                      value={values.note}
+                      onChangeText={handleChange("note")}
+                      onBlur={handleBlur("note")}
+                      multiline
+                      numberOfLines={4}
+                      style={styles(theme).input}
+                      error={touched.note && !!errors.note}
+                    />
+                    {touched.note && errors.note && (
+                      <Text style={styles(theme).errorText}>{errors.note}</Text>
+                    )}
+
+                    <SelectList
+                      setSelected={(val) => setFieldValue("gender", val)}
+                      data={genderOptions}
+                      save="key"
+                      placeholder="Select Gender"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOption={{ key: values.gender, value: genderOptions.find(g => g.key === values.gender)?.value }}
+                    />
+                    {touched.gender && errors.gender && (
+                      <Text style={styles(theme).errorText}>{errors.gender}</Text>
+                    )}
+
+                    <SelectList
+                      setSelected={(val) => setFieldValue("feedingType", val)}
+                      data={feedingTypeOptions}
+                      save="key"
+                      placeholder="Select Feeding Type"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOption={{ key: values.feedingType, value: feedingTypeOptions.find(f => f.key === values.feedingType)?.value }}
+                    />
+                    {touched.feedingType && errors.feedingType && (
+                      <Text style={styles(theme).errorText}>{errors.feedingType}</Text>
+                    )}
+
+                    <SelectList
+                      setSelected={(val) => setFieldValue("relationship", val)}
+                      data={relationshipOptions}
+                      save="key"
+                      placeholder="Select Relationship"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOption={{ key: values.relationship, value: relationshipOptions.find(r => r.key === values.relationship)?.value }}
+                    />
+                    {touched.relationship && errors.relationship && (
+                      <Text style={styles(theme).errorText}>{errors.relationship}</Text>
+                    )}
+
+                    <MultipleSelectList
+                      setSelected={(val) => setFieldValue("allergies", val)}
+                      data={allergyOptions}
+                      save="value"
+                      placeholder="Select Allergies"
+                      search={false}
+                      boxStyles={styles(theme).dropdownBox}
+                      dropdownStyles={styles(theme).dropdown}
+                      defaultOptions={allergyOptions.filter(opt => values.allergies.includes(opt.value))}
+                    />
+                    {touched.allergies && errors.allergies && (
+                      <Text style={styles(theme).errorText}>{errors.allergies}</Text>
+                    )}
+
+                    <DatePickerInput
+                      locale="en"
+                      label="Birth Date"
+                      value={values.birthDate}
+                      onChange={(date) => setFieldValue("birthDate", date)}
+                      inputMode="start"
+                      style={[styles(theme).input, {marginTop: 60}]}
+                    />
+                    {touched.birthDate && errors.birthDate && (
+                      <Text style={styles(theme).errorText}>{errors.birthDate}</Text>
+                    )}
+
+                    <View style={[styles(theme).modalButtons, { marginTop: 60 }]}>
+                      <Button
+                        mode="contained"
+                        onPress={handleSubmit}
+                        style={styles(theme).button}
+                        textColor="white"
+                        disabled={loading}
+                      >
+                        Update
+                      </Button>
+                      <Button
+                        mode="outlined"
+                        onPress={() => setUpdateModalVisible(false)}
+                        style={styles(theme).button}
+                      >
+                        Cancel
+                      </Button>
+                    </View>
+                  </View>
+                )}
+              </Formik>
             </View>
           </View>
-        </View>
+        </SafeAreaProvider>
       </Modal>
 
       {/* Delete Confirmation Modal */}
@@ -517,10 +630,7 @@ const ChildScreen = () => {
       >
         <View style={styles(theme).modalContainer}>
           <View style={styles(theme).modalContent}>
-            <Title
-              text="Delete Child"
-              style={{ fontSize: 20, marginBottom: 20 }}
-            />
+            <Title text="Delete Child" style={{ fontSize: 20, marginBottom: 20 }} />
             <Text style={{ marginBottom: 20 }}>
               Are you sure you want to delete {selectedChild?.name}?
             </Text>
@@ -551,15 +661,7 @@ const ChildScreen = () => {
         style={styles(theme).fab}
         icon="plus"
         color="white"
-        onPress={() => {
-          setName("");
-          setNote("");
-          setBirthDate("");
-          setGender(0);
-          setFeedingType(FeedingTypeEnum.N_A);
-          setAllergies([]);
-          setCreateModalVisible(true);
-        }}
+        onPress={() => setCreateModalVisible(true)}
       />
     </View>
   );
@@ -628,7 +730,7 @@ const styles = (theme) =>
       padding: 20,
       display: "flex",
       justifyContent: "space-between",
-      gap: 5
+      gap: 5,
     },
     input: {
       marginBottom: 16,
@@ -648,24 +750,10 @@ const styles = (theme) =>
       borderColor: "black",
       borderRadius: 4,
     },
-    chipContainer: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      marginBottom: 16,
-    },
-    chip: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: theme.colors.primary,
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      marginRight: 5,
-      marginBottom: 5,
-    },
-    chipText: {
-      color: "white",
-      marginRight: 5,
+    errorText: {
+      fontSize: 14,
+      color: theme.colors.error,
+      marginBottom: 8,
     },
     modalButtons: {
       flexDirection: "row",
