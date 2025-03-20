@@ -10,11 +10,13 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { useTheme, Card, Title, Button } from "react-native-paper";
+import { useTheme, Card } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import api from "../../../configs/api";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { useSelector } from "react-redux";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 
 const MemberConsultationChat = () => {
   const theme = useTheme();
@@ -25,117 +27,81 @@ const MemberConsultationChat = () => {
   const [messages, setMessages] = useState([]);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [sendLoading, setSendLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalMessages, setTotalMessages] = useState(0);
   const [newMessage, setNewMessage] = useState("");
-  const pageSize = 10;
+  const [doctorName, setDoctorName] = useState("");
   const { consultationId } = route.params;
   const flatListRef = useRef(null);
 
-  // Debug state
+  // Scroll to bottom when messages update
   useEffect(() => {
-    console.log("Messages state updated:", messages);
-    console.log("Messages length:", messages.length);
-    console.log("First message:", messages[0]);
+    if (messages.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
   }, [messages]);
 
   useEffect(() => {
     if (user && user._id && consultationId) {
       fetchMessages();
     }
-  }, [user, consultationId, currentPage]);
-
-  useEffect(() => {
-    if (flatListRef.current && messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current.scrollToEnd({ animated: true });
-      }, 300);
-    }
-  }, [messages]);
+  }, [user, consultationId]);
 
   const fetchMessages = async () => {
     try {
       setFetchLoading(true);
       const response = await api.get(
-        `/consultation-messages/consultations/${consultationId}`,
-        {
-          params: {
-            id: consultationId,
-            page: currentPage,
-            size: pageSize,
-            search: "",
-            order: "ascending",
-            sortBy: "date",
-          },
-        }
+        `/consultation-messages/consultations/${consultationId}`
       );
 
-      console.log("API Response:", response.data);
+      const processedMessages = response.data.consultationMessages.map(
+        (msg) => ({
+          ...msg,
+          id: msg._id || `${Date.now()}-${Math.random()}`,
+        })
+      );
 
-      if (response.data && Array.isArray(response.data.consultationMessages)) {
-        // Add a unique key to each message if _id is potentially undefined
-        const processedMessages = response.data.consultationMessages.map(
-          (msg, index) => ({
-            ...msg,
-            key: msg._id || `msg-${index}-${Date.now()}`,
-          })
+      // Extract doctor's name from the first message's consultation data
+      if (
+        processedMessages.length > 0 &&
+        processedMessages[0].consultation?.requestDetails?.doctor?.name
+      ) {
+        setDoctorName(
+          processedMessages[0].consultation.requestDetails.doctor.name
         );
-        setMessages(processedMessages);
-        setTotalMessages(response.data.totalMessages || 0);
-        console.log("Messages set:", processedMessages);
-      } else {
-        setMessages([]);
-        showSnackbar(
-          response.data.Message || "No messages found",
-          5000,
-          "Close"
-        );
-        console.log("No messages found in response");
       }
+
+      setMessages(processedMessages);
     } catch (error) {
       console.error("Error fetching messages:", error);
-      setMessages([]);
       showSnackbar("Failed to load messages", 5000, "Close");
     } finally {
       setFetchLoading(false);
     }
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) {
-      showSnackbar("Please enter a message", 5000, "Close");
-      return;
-    }
+    if (!newMessage.trim()) return;
 
     try {
       setSendLoading(true);
-
-      // Store message text before clearing input
-      const messageText = newMessage;
-
-      // Clear the input field immediately
-      setNewMessage("");
-
       const formData = new FormData();
       formData.append("consultationId", consultationId);
-      formData.append("message", messageText);
+      formData.append("message", newMessage);
 
       const response = await api.post(`/consultation-messages`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      console.log("Send Message Response:", response.data);
+      const newMsg = {
+        id: response.data._id || `${Date.now()}-${Math.random()}`,
+        sender: user._id,
+        message: newMessage,
+        createdAt: new Date().toISOString(),
+        senderInfo: { name: user.name || "You" },
+        consultation: messages[0]?.consultation || {}, // Preserve consultation data for new messages
+      };
 
-      // Refetch messages after a short delay
-      setTimeout(() => {
-        fetchMessages();
-      }, 300);
+      setMessages((prevMessages) => [...prevMessages, newMsg]);
+      setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
       showSnackbar("Failed to send message", 5000, "Close");
@@ -144,329 +110,290 @@ const MemberConsultationChat = () => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  const renderLoading = () => (
-    <View style={styles(theme).loadingContainer}>
-      <ActivityIndicator size="large" color={theme.colors.primary} />
-    </View>
-  );
+  const formatDateForHeader = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    ) {
+      return "Today";
+    } else if (
+      date.getDate() === yesterday.getDate() &&
+      date.getMonth() === yesterday.getMonth() &&
+      date.getFullYear() === yesterday.getFullYear()
+    ) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+  };
 
   const renderMessageItem = ({ item, index }) => {
-    console.log(`Rendering message ${index}:`, item);
+    const isSender = item.sender === user?._id;
+    const currentDate = new Date(item.createdAt);
+    const previousMessage = index > 0 ? messages[index - 1] : null;
+    const previousDate = previousMessage
+      ? new Date(previousMessage.createdAt)
+      : null;
 
-    // Safety check - if no sender or no user, use default values
-    const isSender =
-      item.sender && user && user._id ? item.sender === user._id : false;
+    const showDateHeader =
+      !previousDate ||
+      currentDate.toDateString() !== previousDate.toDateString();
 
     return (
-      <View
-        style={[
-          styles(theme).messageContainer,
-          { justifyContent: isSender ? "flex-end" : "flex-start" },
-        ]}>
-        <View
-          style={[
-            styles(theme).messageBubble,
-            {
-              backgroundColor: isSender ? "#DCF8C6" : "#E8E8E8",
-              borderTopLeftRadius: isSender ? 10 : 0,
-              borderTopRightRadius: isSender ? 0 : 10,
-              borderBottomLeftRadius: 10,
-              borderBottomRightRadius: 10,
-              marginLeft: isSender ? 10 : 0,
-              marginRight: isSender ? 0 : 10,
-            },
-          ]}>
-          <View style={styles(theme).messageHeader}>
-            <Text style={styles(theme).senderName}>
-              {item.senderInfo?.name || (isSender ? "You" : "Unknown")}
-            </Text>
-            <Text style={styles(theme).messageDate}>
-              {item.createdAt ? formatDate(item.createdAt) : "Unknown time"}
+      <>
+        {showDateHeader && (
+          <View style={styles.dateHeader}>
+            <Text style={styles.dateHeaderText}>
+              {formatDateForHeader(item.createdAt)}
             </Text>
           </View>
-          <Text style={styles(theme).messageText}>{item.message || ""}</Text>
+        )}
+        <View
+          style={[
+            styles.messageContainer,
+            { alignSelf: isSender ? "flex-end" : "flex-start" },
+          ]}>
+          <LinearGradient
+            colors={
+              isSender
+                ? [theme.colors.primary, "#D44E3F"]
+                : [theme.colors.lightWhite, "#E8E8E8"]
+            }
+            style={[styles.messageBubble, isSender && styles.senderBubble]}>
+            <Text
+              style={[
+                styles.senderName,
+                isSender ? styles.senderText : styles.receivedText,
+              ]}>
+              {isSender ? "You" : `Dr. ${doctorName}`}
+            </Text>
+            <Text
+              style={[
+                styles.messageText,
+                isSender ? styles.senderText : styles.receivedText,
+              ]}>
+              {item.message}
+            </Text>
+            <Text
+              style={[
+                styles.messageTime,
+                isSender ? styles.senderText : styles.receivedTime,
+              ]}>
+              {formatDateTime(item.createdAt)}
+            </Text>
+          </LinearGradient>
         </View>
-      </View>
+      </>
     );
   };
 
-  const renderPagination = () => {
-    if (totalMessages <= pageSize) return null;
-
-    const totalPages = Math.ceil(totalMessages / pageSize);
-    const pages = [];
-
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(
-        <TouchableOpacity
-          key={i}
-          style={[
-            styles(theme).paginationButton,
-            currentPage === i && styles(theme).paginationButtonActive,
-          ]}
-          onPress={() => handlePageChange(i)}>
-          <Text
-            style={[
-              styles(theme).paginationText,
-              currentPage === i && styles(theme).paginationTextActive,
-            ]}>
-            {i}
-          </Text>
-        </TouchableOpacity>
-      );
-    }
-
-    return <View style={styles(theme).paginationContainer}>{pages}</View>;
-  };
-
-  // Render a test message to debug FlatList issues
-  const renderTestMessage = () => (
-    <View style={styles(theme).debugContainer}>
-      <Text style={styles(theme).debugTitle}>Debug Information:</Text>
-      <Text>Messages Count: {messages.length}</Text>
-      <Text>Is Fetching: {fetchLoading ? "Yes" : "No"}</Text>
-      <Text>User ID: {user?._id || "Unknown"}</Text>
-      <Text>Consultation ID: {consultationId || "Unknown"}</Text>
-    </View>
-  );
-
   return (
     <KeyboardAvoidingView
-      style={styles(theme).container}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}>
-      <Card style={styles(theme).mainCard}>
-        <Card.Content style={styles(theme).cardContent}>
-          <View style={styles(theme).headerContainer}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("MemberConsultationHistory")}
-              style={styles(theme).backButton}>
-              <Text style={styles(theme).backText}>
-                {"< Back to Consultation History"}
-              </Text>
-            </TouchableOpacity>
-            <Title style={styles(theme).title}>Consultation Chat</Title>
-          </View>
+      {fetchLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessageItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messagesList}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Start the conversation!</Text>
+            </View>
+          }
+        />
+      )}
 
-          {fetchLoading ? (
-            renderLoading()
-          ) : (
-            <>
-              {messages.length === 0 && !fetchLoading && renderTestMessage()}
-              <FlatList
-                data={messages}
-                extraData={[messages.length, currentPage]}
-                renderItem={renderMessageItem}
-                keyExtractor={(item, index) =>
-                  item.key || item._id || `msg-${index}`
-                }
-                ListEmptyComponent={
-                  <View style={styles(theme).emptyContainer}>
-                    <Text style={styles(theme).emptyText}>
-                      No messages found
-                    </Text>
-                  </View>
-                }
-                style={styles(theme).messagesList}
-                ref={flatListRef}
-                inverted={false}
-                contentContainerStyle={{ flexGrow: 1, paddingVertical: 10 }}
-                initialNumToRender={20}
-                maxToRenderPerBatch={20}
-                windowSize={21}
-                updateCellsBatchingPeriod={50}
-                removeClippedSubviews={false}
-              />
-            </>
-          )}
-          {renderPagination()}
-        </Card.Content>
-      </Card>
-
-      <View style={styles(theme).inputContainer}>
+      <View style={styles.inputContainer}>
         <TextInput
-          style={styles(theme).textInput}
+          style={styles.textInput}
           value={newMessage}
           onChangeText={setNewMessage}
-          placeholder="Type your message here..."
+          placeholder="Type a message..."
           multiline
-          numberOfLines={3}
+          placeholderTextColor="#999"
         />
-        <Button
-          mode="contained"
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            !newMessage.trim() && styles.sendButtonDisabled,
+          ]}
           onPress={handleSendMessage}
-          loading={sendLoading}
-          style={styles(theme).sendButton}
-          labelStyle={styles(theme).buttonText}
           disabled={sendLoading || !newMessage.trim()}>
-          Send
-        </Button>
+          {sendLoading ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Ionicons name="send" size={24} color="white" />
+          )}
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = (theme) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#f0f2f5",
-    },
-    mainCard: {
-      borderRadius: 8,
-      elevation: 2,
-      backgroundColor: "#fff",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      flex: 1,
-      margin: 16,
-      marginBottom: 0,
-    },
-    cardContent: {
-      flex: 1,
-      paddingBottom: 0,
-    },
-    headerContainer: {
-      marginBottom: 15,
-    },
-    backButton: {
-      marginBottom: 10,
-    },
-    backText: {
-      fontSize: 16,
-      color: "#0056A1",
-      fontWeight: "600",
-    },
-    title: {
-      fontSize: 22,
-      color: theme.colors.primary,
-      fontWeight: "700",
-      textAlign: "center",
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    messagesList: {
-      flex: 1,
-    },
-    messageContainer: {
-      flexDirection: "row",
-      paddingVertical: 10,
-      paddingHorizontal: 10,
-    },
-    messageBubble: {
-      maxWidth: "70%",
-      padding: 10,
-    },
-    messageHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 5,
-    },
-    senderName: {
-      fontSize: 16,
-      fontWeight: "600",
-      marginRight: 10,
-    },
-    messageDate: {
-      fontSize: 14,
-      color: "#666",
-    },
-    messageText: {
-      fontSize: 16,
-      color: "#333",
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    emptyText: {
-      textAlign: "center",
-      color: "#757575",
-      fontSize: 16,
-      padding: 20,
-    },
-    paginationContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginVertical: 10,
-    },
-    paginationButton: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: "#f0f0f0",
-      justifyContent: "center",
-      alignItems: "center",
-      marginHorizontal: 4,
-    },
-    paginationButtonActive: {
-      backgroundColor: theme.colors.primary,
-    },
-    paginationText: {
-      color: "#333",
-    },
-    paginationTextActive: {
-      color: "#fff",
-    },
-    inputContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: 10,
-      backgroundColor: "#fff",
-      borderTopWidth: 1,
-      borderTopColor: "#d9d9d9",
-      marginHorizontal: 16,
-      marginBottom: 16,
-    },
-    textInput: {
-      flex: 1,
-      backgroundColor: "#f5f5f5",
-      borderWidth: 1,
-      borderColor: "#d9d9d9",
-      borderRadius: 8,
-      padding: 10,
-      fontSize: 16,
-      minHeight: 40,
-      maxHeight: 80,
-      marginRight: 10,
-    },
-    sendButton: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 4,
-    },
-    buttonText: {
-      color: "white",
-      fontWeight: "600",
-    },
-    debugContainer: {
-      padding: 10,
-      backgroundColor: "#f8f8f8",
-      borderRadius: 8,
-      margin: 10,
-    },
-    debugTitle: {
-      fontWeight: "bold",
-      marginBottom: 5,
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  header: {
+    padding: 20,
+    paddingTop: 40,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  backText: {
+    color: "white",
+    fontSize: 16,
+    marginLeft: 8,
+    fontFamily: "GothamRnd-Medium",
+  },
+  title: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    fontFamily: "GothamRnd-Bold",
+  },
+  messagesList: {
+    padding: 15,
+    paddingBottom: 80,
+  },
+  dateHeader: {
+    alignSelf: "center",
+    marginVertical: 10,
+    backgroundColor: "#E0E0E0",
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 15,
+  },
+  dateHeaderText: {
+    fontSize: 14,
+    color: "#333",
+    fontFamily: "GothamRnd-Medium",
+  },
+  messageContainer: {
+    maxWidth: "75%",
+    marginVertical: 5,
+  },
+  messageBubble: {
+    padding: 12,
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  senderBubble: {
+    borderBottomRightRadius: 5,
+  },
+  senderName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 4,
+    fontFamily: "GothamRnd-Medium",
+  },
+  messageText: {
+    fontSize: 16,
+    fontFamily: "GothamRnd-Regular",
+  },
+  messageTime: {
+    fontSize: 12,
+    alignSelf: "flex-end",
+    marginTop: 4,
+    fontFamily: "GothamRnd-Light",
+  },
+  senderText: {
+    color: "white",
+  },
+  receivedText: {
+    color: "#333",
+  },
+  receivedTime: {
+    color: "#666",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "GothamRnd-Regular",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    padding: 10,
+    backgroundColor: "white",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    elevation: 5,
+  },
+  textInput: {
+    flex: 1,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 25,
+    padding: 12,
+    paddingTop: 12,
+    marginRight: 10,
+    fontSize: 16,
+    maxHeight: 100,
+    fontFamily: "GothamRnd-Regular",
+    color: "#333",
+  },
+  sendButton: {
+    backgroundColor: "#EF6351",
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sendButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+});
 
 export default MemberConsultationChat;

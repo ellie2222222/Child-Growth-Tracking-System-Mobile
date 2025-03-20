@@ -79,7 +79,7 @@ const MemberConsultationHistory = () => {
           if (
             !requestIdMap.has(requestId) ||
             new Date(consultation.updatedAt) >
-            new Date(requestIdMap.get(requestId).updatedAt)
+              new Date(requestIdMap.get(requestId).updatedAt)
           ) {
             requestIdMap.set(requestId, consultation);
           }
@@ -361,7 +361,7 @@ const MemberConsultationHistory = () => {
                 </Text>
               </View>
               {result.headCircumference &&
-                result.headCircumference.description !== "Insufficient data" ? (
+              result.headCircumference.description !== "Insufficient data" ? (
                 <View>
                   <Text style={styles(theme).metricLabel}>
                     Head Circumference Velocity:
@@ -390,11 +390,11 @@ const MemberConsultationHistory = () => {
         {/* Percentile Information */}
         {(result.weight.description &&
           result.weight.description.includes("percentile")) ||
-          (result.height.description &&
-            result.height.description.includes("percentile")) ||
-          (result.headCircumference &&
-            result.headCircumference.description &&
-            result.headCircumference.description.includes("percentile")) ? (
+        (result.height.description &&
+          result.height.description.includes("percentile")) ||
+        (result.headCircumference &&
+          result.headCircumference.description &&
+          result.headCircumference.description.includes("percentile")) ? (
           <View style={styles(theme).percentileInfoContainer}>
             <Text style={styles(theme).percentileInfoTitle}>
               Percentile Information:
@@ -453,11 +453,10 @@ const MemberConsultationHistory = () => {
           visible={modalVisible}
           onDismiss={() => setModalVisible(false)}
           contentContainerStyle={styles(theme).modalContainer}>
+          <Title style={styles(theme).modalTitle}>Consultation Details</Title>
           <ScrollView
             contentContainerStyle={styles(theme).modalScrollContainer}
             showsVerticalScrollIndicator={true}>
-            <Title style={styles(theme).modalTitle}>Consultation Details</Title>
-
             {selectedConsultation &&
               selectedConsultation.requestDetails?.children?.length > 0 && (
                 <View style={styles(theme).modalContent}>
@@ -519,42 +518,39 @@ const MemberConsultationHistory = () => {
                   {/* Growth Velocity Results */}
                   {selectedConsultation.requestDetails.children[0]
                     .growthVelocityResult && (
-                      <View style={styles(theme).growthVelocityContainer}>
-                        <Title style={styles(theme).growthVelocityTitle}>
-                          Growth Velocity Results
-                        </Title>
+                    <View style={styles(theme).growthVelocityContainer}>
+                      <Title style={styles(theme).growthVelocityTitle}>
+                        Growth Velocity Results
+                      </Title>
 
-                        <View style={styles(theme).growthVelocityWrapper}>
-                          {selectedConsultation.requestDetails.children[0].growthVelocityResult.map(
-                            (result, index) =>
-                              renderGrowthVelocityCard(result, index)
-                          )}
-                        </View>
+                      <View style={styles(theme).growthVelocityWrapper}>
+                        {selectedConsultation.requestDetails.children[0].growthVelocityResult.map(
+                          (result, index) =>
+                            renderGrowthVelocityCard(result, index)
+                        )}
                       </View>
-                    )}
-
-                  <View style={styles(theme).modalFooter}>
-                    <Button
-                      mode="outlined"
-                      onPress={() => setModalVisible(false)}
-                      style={styles(theme).cancelButton}
-                      labelStyle={styles(theme).cancelButtonText}>
-                      Cancel
-                    </Button>
-
-                    <Button
-                      mode="contained"
-                      onPress={() =>
-                        handleStartConsultation(selectedConsultation._id)
-                      }
-                      style={styles(theme).startConsultationButton}
-                      labelStyle={styles(theme).buttonText}>
-                      Chat
-                    </Button>
-                  </View>
+                    </View>
+                  )}
                 </View>
               )}
           </ScrollView>
+          <View style={styles(theme).modalFooter}>
+            <Button
+              mode="outlined"
+              onPress={() => setModalVisible(false)}
+              style={styles(theme).cancelButton}
+              labelStyle={styles(theme).cancelButtonText}>
+              Cancel
+            </Button>
+
+            <Button
+              mode="contained"
+              onPress={() => handleStartConsultation(selectedConsultation._id)}
+              style={styles(theme).startConsultationButton}
+              labelStyle={styles(theme).buttonText}>
+              Chat
+            </Button>
+          </View>
         </Modal>
       </Portal>
     </ScrollView>
