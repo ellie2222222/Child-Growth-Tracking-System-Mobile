@@ -199,6 +199,9 @@ const styles = StyleSheet.create({
     marginTop: 15,
     gap: 20,
   },
+  logoutButton: {
+    borderRadius: 50,
+  },
 });
 
 export default SettingsScreen;

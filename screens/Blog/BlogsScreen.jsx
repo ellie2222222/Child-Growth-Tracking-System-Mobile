@@ -200,7 +200,7 @@ const BlogsScreen = ({ navigation }) => {
       marginVertical: 16,
       alignSelf: "center",
       backgroundColor: theme.colors.primary,
-      borderRadius: 8,
+      borderRadius: 50,
       paddingHorizontal: 16,
     },
     loadMoreText: {
@@ -297,7 +297,7 @@ const BlogsScreen = ({ navigation }) => {
               mode="contained"
               style={styles.ctaButton}
               labelStyle={{ color: "white" }}
-              onPress={() => {}}>
+              onPress={() => { }}>
               Subscribe Now
             </Button>
           </Card.Content>
