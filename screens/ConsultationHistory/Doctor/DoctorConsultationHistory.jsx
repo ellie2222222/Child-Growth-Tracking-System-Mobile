@@ -632,7 +632,7 @@ const styles = (theme) =>
         viewDetailsButton: {
             marginTop: 10,
             backgroundColor: theme.colors.primary,
-            borderRadius: 4,
+            borderRadius: 50,
         },
         buttonText: {
             color: "white",

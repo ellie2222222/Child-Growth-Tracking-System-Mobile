@@ -199,7 +199,7 @@ const DoctorConsultationStacks = () => {
         options={{ headerTitle: "Consultation History" }}
       />
       <Stack.Screen
-        name="MemberConsultationChat"
+        name="DoctorConsultationChat"
         component={DoctorConsultationChat}
         options={{ headerTitle: "Consultation Chat" }}
       />

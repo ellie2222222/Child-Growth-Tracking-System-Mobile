@@ -79,7 +79,7 @@ const MemberConsultationHistory = () => {
           if (
             !requestIdMap.has(requestId) ||
             new Date(consultation.updatedAt) >
-              new Date(requestIdMap.get(requestId).updatedAt)
+            new Date(requestIdMap.get(requestId).updatedAt)
           ) {
             requestIdMap.set(requestId, consultation);
           }
@@ -361,7 +361,7 @@ const MemberConsultationHistory = () => {
                 </Text>
               </View>
               {result.headCircumference &&
-              result.headCircumference.description !== "Insufficient data" ? (
+                result.headCircumference.description !== "Insufficient data" ? (
                 <View>
                   <Text style={styles(theme).metricLabel}>
                     Head Circumference Velocity:
@@ -390,11 +390,11 @@ const MemberConsultationHistory = () => {
         {/* Percentile Information */}
         {(result.weight.description &&
           result.weight.description.includes("percentile")) ||
-        (result.height.description &&
-          result.height.description.includes("percentile")) ||
-        (result.headCircumference &&
-          result.headCircumference.description &&
-          result.headCircumference.description.includes("percentile")) ? (
+          (result.height.description &&
+            result.height.description.includes("percentile")) ||
+          (result.headCircumference &&
+            result.headCircumference.description &&
+            result.headCircumference.description.includes("percentile")) ? (
           <View style={styles(theme).percentileInfoContainer}>
             <Text style={styles(theme).percentileInfoTitle}>
               Percentile Information:
@@ -518,19 +518,19 @@ const MemberConsultationHistory = () => {
                   {/* Growth Velocity Results */}
                   {selectedConsultation.requestDetails.children[0]
                     .growthVelocityResult && (
-                    <View style={styles(theme).growthVelocityContainer}>
-                      <Title style={styles(theme).growthVelocityTitle}>
-                        Growth Velocity Results
-                      </Title>
+                      <View style={styles(theme).growthVelocityContainer}>
+                        <Title style={styles(theme).growthVelocityTitle}>
+                          Growth Velocity Results
+                        </Title>
 
-                      <View style={styles(theme).growthVelocityWrapper}>
-                        {selectedConsultation.requestDetails.children[0].growthVelocityResult.map(
-                          (result, index) =>
-                            renderGrowthVelocityCard(result, index)
-                        )}
+                        <View style={styles(theme).growthVelocityWrapper}>
+                          {selectedConsultation.requestDetails.children[0].growthVelocityResult.map(
+                            (result, index) =>
+                              renderGrowthVelocityCard(result, index)
+                          )}
+                        </View>
                       </View>
-                    </View>
-                  )}
+                    )}
                 </View>
               )}
           </ScrollView>
@@ -627,8 +627,8 @@ const styles = (theme) =>
     },
     viewDetailsButton: {
       marginTop: 10,
+      borderRadius: 50,
       backgroundColor: theme.colors.primary,
-      borderRadius: 4,
     },
     buttonText: {
       color: "white",

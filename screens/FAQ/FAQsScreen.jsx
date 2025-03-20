@@ -149,7 +149,7 @@ export const FAQsScreen = () => {
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 8,
+      borderRadius: 50,
       paddingHorizontal: 12,
     },
   });
@@ -220,7 +220,7 @@ export const FAQsScreen = () => {
               mode="contained"
               style={styles.ctaButton}
               labelStyle={{ color: "white" }}
-              onPress={() => {}}>
+              onPress={() => { }}>
               Contact Support
             </Button>
           </Card.Content>

@@ -354,7 +354,7 @@ const styles = (theme) =>
     submitButton: {
       backgroundColor: theme.colors.primary,
       borderRadius: 50,
-      paddingVertical: 15,
+      paddingVertical: 5,
       marginTop: 10,
     },
     submitButtonText: {
