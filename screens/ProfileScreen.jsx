@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { useTheme, Avatar, Card, Divider } from "react-native-paper";
+import { useTheme, Avatar, Card, Divider, ActivityIndicator } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Text from "../components/Text";
 import Title from "../components/Title";
@@ -31,7 +31,7 @@ export const ProfileScreen = () => {
         const fetchedUser = userResponse.data.user;
 
         let membershipDetails = null;
-        if (fetchedUser.role === 0) {
+        if (fetchedUser?.role === 0) {
           const planResponse = await api.get(
             `/membership-packages/${fetchedUser.subscription.currentPlan}`,
             { withCredentials: true }
@@ -56,13 +56,12 @@ export const ProfileScreen = () => {
           email: fetchedUser.email,
           phone: fetchedUser.phoneNumber,
           role: fetchedUser.role,
-          avatar: fetchedUser.avatar || "https://i.pravatar.cc/300",
+          avatar: fetchedUser.avatar || "https://cdn-icons-png.freepik.com/512/6596/6596121.png",
           subscriptionDetails: fetchedUser.subscription,
           membership: membershipDetails,
         });
       } catch (err) {
         setError("Failed to fetch user or plan information");
-        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -73,7 +72,7 @@ export const ProfileScreen = () => {
 
   const renderUserInfo = () => (
     <View style={styles.userInfoSection}>
-      <Avatar.Image size={120} source={{ uri: userInfo.avatar }} style={styles.avatar} />
+      <Avatar.Icon size={120} icon="account" style={styles.avatar} />
       <Text variant="medium" style={styles.userName}>
         {userInfo.name}{" "}
         <Text variant="medium" style={{ color: userInfo.role === 2 ? "#F25A49" : "#F25A49" }}>
@@ -114,7 +113,16 @@ export const ProfileScreen = () => {
   );
 
   if (loading) {
-    return <View style={styles.container}><Text style={styles.loadingText}>Loading...</Text></View>;
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator
+          animating={true}
+          size="large"
+          color={theme.colors.primary}
+        />
+        <Text style={{ color: theme.colors.primary }}>Loading...</Text>
+      </View>
+    )
   }
 
   if (error) {

@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   StyleSheet,
   ScrollView,
-  Dimensions,
   Animated,
   Image,
   ActivityIndicator,
-  TouchableOpacity,
 } from "react-native";
 import { useTheme, Text, Card, Button, Divider } from "react-native-paper";
-import { DynamicHeader } from "../../components/DynamicHeader";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import api from "../../configs/api";
-
-const windowWidth = Dimensions.get("window").width;
+import { useFocusEffect } from "@react-navigation/native";
+import bannerImage from "../../assets/banner_img.jpg";
 
 export const BlogDetailedScreen = ({ route, navigation }) => {
   const theme = useTheme();
@@ -24,44 +20,45 @@ export const BlogDetailedScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchBlogPost = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/posts/${postId}`);
-
-        if (!response.data || !response.data.post) {
-          throw new Error("Invalid blog post data received from API");
+  useFocusEffect(
+    useCallback(() => {
+      const fetchBlogPost = async () => {
+        try {
+          setLoading(true);
+          const response = await api.get(`/posts/${postId}`);
+  
+          if (!response.data || !response.data.post) {
+            throw new Error("Invalid blog post data received from API");
+          }
+  
+          const post = response.data.post;
+          setBlogPost({
+            id: post._id,
+            title: post.title,
+            date: new Date(post.createdAt).toLocaleDateString(),
+            content: post.content.replace(/<[^>]+>/g, ""),
+            thumbnail:
+              post.thumbnailUrl === "" || post.thumbnailUrl === undefined
+                ? bannerImage
+                : post.thumbnailUrl, 
+          });
+        } catch (err) {
+          setError(err.message || "Failed to fetch blog post");
+        } finally {
+          setLoading(false);
         }
-
-        const post = response.data.post;
-        setBlogPost({
-          id: post._id,
-          title: post.title,
-          date: new Date(post.createdAt).toLocaleDateString(),
-          content: post.content.replace(/<[^>]+>/g, ""),
-          thumbnail: post.thumbnailUrl,
-        });
-      } catch (err) {
-        console.error(
-          "Error fetching blog post:",
-          err.response ? err.response.data : err.message
-        );
-        setError(err.message || "Failed to fetch blog post");
-      } finally {
+      };
+  
+      if (postId) {
+        fetchBlogPost();
+      } else {
         setLoading(false);
+        setError("No post ID provided");
       }
-    };
+    }, [postId])
+  );
 
-    if (postId) {
-      fetchBlogPost();
-    } else {
-      setLoading(false);
-      setError("No post ID provided");
-    }
-  }, [postId]);
-
-  const styles = StyleSheet.create({
+  const styles = (theme) => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: "#fff",
@@ -93,28 +90,27 @@ export const BlogDetailedScreen = ({ route, navigation }) => {
       fontSize: 14,
       color: "#777",
       marginBottom: 8,
-      fontStyle: "italic",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     titleText: {
-      fontSize: 28,
-      fontWeight: "700",
+      fontSize: 28, 
       color: "#1a1a1a",
       marginBottom: 12,
       lineHeight: 34,
-      fontFamily: "GothamRnd-Medium",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     excerptText: {
       fontSize: 16,
       color: "#444",
       marginBottom: 20,
       lineHeight: 24,
-      fontStyle: "italic",
       borderLeftWidth: 4,
       borderLeftColor: theme.colors.primary,
       paddingLeft: 12,
       backgroundColor: "#f9f9f9",
       paddingVertical: 10,
       borderRadius: 8,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     contentText: {
       fontSize: 16,
@@ -122,6 +118,7 @@ export const BlogDetailedScreen = ({ route, navigation }) => {
       lineHeight: 26,
       marginBottom: 24,
       textAlign: "justify",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     divider: {
       height: 1,
@@ -148,13 +145,14 @@ export const BlogDetailedScreen = ({ route, navigation }) => {
     },
     ctaTitle: {
       fontSize: 18,
-      fontWeight: "500",
-      color: "#1a1a1a",
+      fontFamily: theme.fonts.medium.fontFamily,
+      color: "#1a1a1a", 
     },
     ctaText: {
       fontSize: 14,
       color: "#555",
       width: "65%",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
@@ -171,68 +169,69 @@ export const BlogDetailedScreen = ({ route, navigation }) => {
       color: "#d32f2f",
       textAlign: "center",
       marginTop: 20,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
   });
 
   return (
-    <View style={styles.container}>
+    <View style={styles(theme).container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={styles(theme).scrollViewContent}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}>
         {loading ? (
-          <View style={styles.loadingContainer}>
+          <View style={styles(theme).loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.errorText}>Loading post details...</Text>
+            <Text style={styles(theme).errorText}>Loading post details...</Text>
           </View>
         ) : error ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.errorText}>Error: {error}</Text>
+          <View style={styles(theme).loadingContainer}>
+            <Text style={styles(theme).errorText}>Error: {error}</Text>
             <Button
               mode="contained"
-              style={styles.ctaButton}
+              style={styles(theme).ctaButton}
               onPress={() => navigation.goBack()}
               labelStyle={{ color: "white" }}>
               Go Back
             </Button>
           </View>
         ) : blogPost ? (
-          <View style={styles.contentSection}>
+          <View style={styles(theme).contentSection}>
             {/* Thumbnail */}
             <Image
               source={{ uri: blogPost.thumbnail }}
-              style={styles.thumbnail}
+              style={styles(theme).thumbnail}
             />
 
             {/* Date */}
-            <Text style={styles.dateText}>{blogPost.date}</Text>
+            <Text style={styles(theme).dateText}>{blogPost.date}</Text>
 
             {/* Title */}
-            <Text style={styles.titleText}>{blogPost.title}</Text>
+            <Text style={styles(theme).titleText}>{blogPost.title}</Text>
 
             {/* Full Content */}
-            <Text style={styles.contentText}>{blogPost.content}</Text>
+            <Text style={styles(theme).contentText}>{blogPost.content}</Text>
 
             {/* Divider */}
-            <Divider style={styles.divider} />
+            <Divider style={styles(theme).divider} />
 
             {/* Call to Action */}
-            <Card style={styles.ctaCard}>
-              <Card.Content style={styles.ctaContent}>
+            <Card style={styles(theme).ctaCard}>
+              <Card.Content style={styles(theme).ctaContent}>
                 <View>
-                  <Text style={styles.ctaTitle}>Want more parenting tips?</Text>
-                  <Text style={styles.ctaText}>
+                  <Text style={styles(theme).ctaTitle}>Want more parenting tips?</Text>
+                  <Text style={styles(theme).ctaText}>
                     Explore our knowledge-sharing blog for more insights and
                     advice.
                   </Text>
                 </View>
                 <Button
                   mode="contained"
-                  style={styles.ctaButton}
+                  style={styles(theme).ctaButton}
                   labelStyle={{ color: "white" }}
                   onPress={() => navigation.navigate("Blogs")}>
                   View All Blogs

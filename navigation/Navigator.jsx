@@ -24,7 +24,7 @@ import MemberConsultationChat from "../screens/ConsultationHistory/Member/Member
 import DoctorConsultationRequest from "../screens/ConsultationRequest/Doctor/DoctorConsultationRequest";
 import DoctorConsultationHistory from "../screens/ConsultationHistory/Doctor/DoctorConsultationHistory.jsx";
 import DoctorConsultationChat from "../screens/ConsultationHistory/Doctor/DoctorConsultationChat";
-
+import MembershipDetailsScreen from "../screens/MembershipDetailsScreen.jsx";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -107,8 +107,16 @@ const ChildStack = () => {
   const theme = useTheme();
   return (
     <Stack.Navigator screenOptions={getHeaderStyles(theme)}>
-      <Stack.Screen name="ChildTab" component={ChildScreen} options={{ title: "Child" }} />
-      <Stack.Screen name="ChildDetails" component={ChildDetailsScreen} options={{ title: "Child Details" }} />
+      <Stack.Screen
+        name="ChildTab"
+        component={ChildScreen}
+        options={{ title: "Child" }}
+      />
+      <Stack.Screen
+        name="ChildDetails"
+        component={ChildDetailsScreen}
+        options={{ title: "Child Details" }}
+      />
       <Stack.Screen
         name="GrowthDataDetails"
         component={GrowthDataDetailsScreen}
@@ -135,12 +143,17 @@ const HomeStack = () => {
       <Stack.Screen
         name="BlogDetailed"
         component={BlogDetailedScreen}
-        options={{ ...getHeaderStyles(theme), headerTitle: "" }}
+        options={{ ...getHeaderStyles(theme), headerTitle: "Blog Details" }}
       />
       <Stack.Screen
         name="FAQs"
         component={FAQsScreen}
         options={getHeaderStyles(theme)}
+      />
+      <Stack.Screen
+        name="MembershipDetails"
+        component={MembershipDetailsScreen}
+        options={{ title: "Membership Details", ...getHeaderStyles(theme) }}
       />
     </Stack.Navigator>
   );
@@ -205,6 +218,24 @@ const DoctorConsultationStacks = () => {
   );
 };
 
+const DoctorConsultationRequestStack = () => {
+  const theme = useTheme();
+  return (
+    <Stack.Navigator screenOptions={getHeaderStyles(theme)}>
+      <Stack.Screen
+        name="DoctorConsultationRequestTab"
+        component={DoctorConsultationRequest}
+        options={{ title: "Consultation Request" }}
+      />
+      <Stack.Screen
+        name="ChildDetails"
+        component={ChildDetailsScreen}
+        options={{ title: "Child Details" }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 const Navigator = ({ isAuthenticated, loading, user }) => {
   const theme = useTheme();
 
@@ -252,10 +283,7 @@ const Navigator = ({ isAuthenticated, loading, user }) => {
               <Tab.Screen
                 name="ConsultationHistory"
                 component={MemberConsultationStacks}
-                options={{
-                  headerShown: false,
-                  tabBarLabel: "History",
-                }}
+                options={{ headerShown: false, tabBarLabel: "History" }}
               />
               <Tab.Screen
                 name="Settings"
@@ -268,20 +296,13 @@ const Navigator = ({ isAuthenticated, loading, user }) => {
             <>
               <Tab.Screen
                 name="ConsultationRequest"
-                component={DoctorConsultationRequest}
-                options={{
-                  headerShown: true,
-                  tabBarLabel: "Request",
-                  title: "Consultation Request",
-                }}
+                component={DoctorConsultationRequestStack}
+                options={{ headerShown: false, tabBarLabel: "Request" }}
               />
               <Tab.Screen
                 name="ConsultationHistory"
                 component={DoctorConsultationStacks}
-                options={{
-                  headerShown: false,
-                  tabBarLabel: "History",
-                }}
+                options={{ headerShown: false, tabBarLabel: "History" }}
               />
               <Tab.Screen
                 name="Settings"

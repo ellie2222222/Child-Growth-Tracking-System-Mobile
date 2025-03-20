@@ -32,13 +32,6 @@ const BlogsScreen = ({ navigation }) => {
         setLoading(true);
       }
 
-      console.log("Fetching blog posts with params:", {
-        page: pageNum,
-        size: PAGE_SIZE,
-        sortBy: "date",
-        order: "descending",
-      });
-
       const response = await api.get("/posts", {
         params: {
           page: pageNum,
@@ -71,13 +64,7 @@ const BlogsScreen = ({ navigation }) => {
       if (response.data.posts.length < PAGE_SIZE) {
         setHasMore(false);
       }
-
-      console.log("Blog posts fetched successfully:", posts);
     } catch (err) {
-      console.error(
-        "Error fetching blog posts:",
-        err.response ? err.response.data : err.message
-      );
       setError(err.message || "Failed to fetch blog posts");
     } finally {
       if (append) {
@@ -100,7 +87,7 @@ const BlogsScreen = ({ navigation }) => {
     }
   };
 
-  const styles = StyleSheet.create({
+  const styles = (theme) => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: "#fff",
@@ -114,15 +101,15 @@ const BlogsScreen = ({ navigation }) => {
     },
     headerTitle: {
       fontSize: 28,
-      fontWeight: "bold",
       color: "#333",
       marginBottom: 8,
-      fontFamily: "GothamRnd-Medium",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     headerDescription: {
       fontSize: 14,
       color: "#666",
       lineHeight: 20,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     blogSection: {
       marginBottom: 32,
@@ -146,7 +133,7 @@ const BlogsScreen = ({ navigation }) => {
     },
     blogTitle: {
       fontSize: 16,
-      fontWeight: "500",
+      fontFamily: theme.fonts.medium.fontFamily,
       color: "#333",
       marginBottom: 4,
     },
@@ -155,11 +142,12 @@ const BlogsScreen = ({ navigation }) => {
       color: "#666",
       marginBottom: 8,
       lineHeight: 18,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     blogDate: {
       fontSize: 12,
       color: "#999",
-      fontStyle: "italic",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     ctaCard: {
       backgroundColor: "#f9f9ff",
@@ -182,7 +170,7 @@ const BlogsScreen = ({ navigation }) => {
     },
     ctaTitle: {
       fontSize: 16,
-      fontWeight: "500",
+      fontFamily: theme.fonts.medium.fontFamily,
       color: "#333",
       marginBottom: 8,
     },
@@ -190,6 +178,7 @@ const BlogsScreen = ({ navigation }) => {
       fontSize: 13,
       color: "#444",
       width: "70%",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
@@ -205,34 +194,35 @@ const BlogsScreen = ({ navigation }) => {
     },
     loadMoreText: {
       color: "white",
-      fontWeight: "500",
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     noMoreText: {
       textAlign: "center",
       color: "#666",
       marginVertical: 16,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
   });
 
   return (
-    <View style={styles.container}>
+    <View style={styles(theme).container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={styles(theme).scrollViewContent}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}>
-        <View style={styles.headerSection}>
-          <Text style={styles.headerTitle}>Knowledge Sharing Blogs</Text>
-          <Text style={styles.headerDescription}>
+        <View style={styles(theme).headerSection}>
+          <Text style={styles(theme).headerTitle}>Knowledge Sharing Blogs</Text>
+          <Text style={styles(theme).headerDescription}>
             Discover tips, insights, and expert advice on child development,
             nutrition, and parenting to support your child’s growth journey.
           </Text>
         </View>
 
-        <View style={styles.blogSection}>
+        <View style={styles(theme).blogSection}>
           {loading && blogPosts.length === 0 ? (
             <Text>Loading blog posts...</Text>
           ) : error ? (
@@ -241,7 +231,7 @@ const BlogsScreen = ({ navigation }) => {
             blogPosts.map((post) => (
               <TouchableOpacity
                 key={post.id}
-                style={styles.blogItem}
+                style={styles(theme).blogItem}
                 onPress={() =>
                   navigation.navigate("BlogDetailed", { postId: post.id })
                 }>
@@ -251,14 +241,14 @@ const BlogsScreen = ({ navigation }) => {
                       ? { uri: post.thumbnail }
                       : post.thumbnail
                   }
-                  style={styles.blogThumbnail}
+                  style={styles(theme).blogThumbnail}
                 />
-                <View style={styles.blogContent}>
-                  <Text style={styles.blogTitle}>{post.title}</Text>
-                  <Text style={styles.blogExcerpt} numberOfLines={2}>
+                <View style={styles(theme).blogContent}>
+                  <Text style={styles(theme).blogTitle}>{post.title}</Text>
+                  <Text style={styles(theme).blogExcerpt} numberOfLines={2}>
                     {post.excerpt}
                   </Text>
-                  <Text style={styles.blogDate}>{post.date}</Text>
+                  <Text style={styles(theme).blogDate}>{post.date}</Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -270,32 +260,32 @@ const BlogsScreen = ({ navigation }) => {
             {hasMore ? (
               <Button
                 mode="contained"
-                style={styles.loadMoreButton}
+                style={styles(theme).loadMoreButton}
                 onPress={handleLoadMore}
                 loading={loadingMore}
                 disabled={loadingMore}>
-                <Text style={styles.loadMoreText}>
+                <Text style={styles(theme).loadMoreText}>
                   {loadingMore ? "Loading..." : "Load More"}
                 </Text>
               </Button>
             ) : (
-              <Text style={styles.noMoreText}>No more posts to load</Text>
+              <Text style={styles(theme).noMoreText}>No more posts to load</Text>
             )}
           </View>
         )}
 
-        <Card style={styles.ctaCard}>
-          <Card.Content style={styles.ctaContent}>
+        <Card style={styles(theme).ctaCard}>
+          <Card.Content style={styles(theme).ctaContent}>
             <View>
-              <Text style={styles.ctaTitle}>Want to learn more?</Text>
-              <Text style={styles.ctaText}>
+              <Text style={styles(theme).ctaTitle}>Want to learn more?</Text>
+              <Text style={styles(theme).ctaText}>
                 Stay updated with the latest parenting tips and insights from
                 our experts.
               </Text>
             </View>
             <Button
               mode="contained"
-              style={styles.ctaButton}
+              style={styles(theme).ctaButton}
               labelStyle={{ color: "white" }}
               onPress={() => { }}>
               Subscribe Now

@@ -22,6 +22,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import bannerImage from "../assets/banner_img.jpg";
 import { useNavigation } from "@react-navigation/native";
 import api from "../configs/api";
+import { useSelector } from "react-redux";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -36,6 +37,7 @@ const HomeScreen = () => {
   const [blogError, setBlogError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useSelector(state => state.auth);
 
   useEffect(() => {
     const fetchMembershipPlans = async () => {
@@ -62,7 +64,6 @@ const HomeScreen = () => {
 
         setMembershipPlans(mappedPlans);
       } catch (err) {
-        console.error("Error fetching membership plans:", err);
         setError(err.message || "Failed to fetch membership plans");
       } finally {
         setLoading(false);
@@ -102,7 +103,6 @@ const HomeScreen = () => {
 
         setBlogPosts(posts);
       } catch (err) {
-        console.error("Error fetching blog posts:", err);
         setBlogError(err.message || "Failed to fetch blog posts");
       } finally {
         setBlogLoading(false);
@@ -173,13 +173,13 @@ const HomeScreen = () => {
   ];
 
   const renderHeroSection = () => (
-    <View style={styles.heroSection}>
+    <View style={styles(theme).heroSection}>
       <View style={{ padding: 16, height: 200 }}>
-        <Image source={bannerImage} style={styles.heroImage} />
+        <Image source={bannerImage} style={styles(theme).heroImage} />
       </View>
-      <View style={styles.heroContent}>
-        <Title style={styles.heroTitle}>Track your child's development</Title>
-        <Paragraph style={styles.heroDescription}>
+      <View style={styles(theme).heroContent}>
+        <Title style={styles(theme).heroTitle}>Track your child's development</Title>
+        <Paragraph style={styles(theme).heroDescription}>
           GrowEasy helps you comprehensively monitor your child's growth from
           infancy to adulthood with medical-standard charts.
         </Paragraph>
@@ -189,15 +189,15 @@ const HomeScreen = () => {
             backgroundColor: theme.colors.primary,
             marginTop: 10,
             paddingVertical: 15,
-            borderRadius: 50,
+            borderRadius: 10,
             alignItems: "center",
           }}
           onPress={() => { }}>
           <Text
             style={{
               color: "white",
-              fontWeight: "bold",
               fontFamily: theme.fonts.medium.fontFamily,
+              fontSize: 16
             }}>
             Get Started
           </Text>
@@ -207,10 +207,10 @@ const HomeScreen = () => {
   );
 
   const renderAppInfo = () => (
-    <View style={styles.appInfoSection}>
+    <View style={styles(theme).appInfoSection}>
       <Text
         style={[
-          styles.sectionTitle,
+          styles(theme).sectionTitle,
           {
             color: theme.colors.primary,
             fontFamily: theme.fonts.medium.fontFamily,
@@ -218,11 +218,11 @@ const HomeScreen = () => {
         ]}>
         About GrowEasy
       </Text>
-      <Paragraph style={styles.appInfoText}>
+      <Paragraph style={styles(theme).appInfoText}>
         GrowEasy is a software for tracking children's growth from birth to
         adulthood, developed by leading pediatricians and nutritional experts.
       </Paragraph>
-      <Paragraph style={styles.appInfoText}>
+      <Paragraph style={styles(theme).appInfoText}>
         With medical-standard growth charts, the app helps parents monitor their
         child's development, detect early abnormalities, and receive advice from
         medical specialists.
@@ -231,10 +231,10 @@ const HomeScreen = () => {
   );
 
   const renderFeatureHighlights = () => (
-    <View style={styles.featuresSection}>
+    <View style={styles(theme).featuresSection}>
       <Text
         style={[
-          styles.sectionTitle,
+          styles(theme).sectionTitle,
           {
             color: theme.colors.primary,
             fontFamily: theme.fonts.medium.fontFamily,
@@ -243,17 +243,17 @@ const HomeScreen = () => {
         Key Features
       </Text>
       {features.map((feature) => (
-        <TouchableOpacity key={feature.id} style={styles.featureItem}>
+        <TouchableOpacity key={feature.id} style={styles(theme).featureItem}>
           <View
             style={[
-              styles.featureIconContainer,
+              styles(theme).featureIconContainer,
               { backgroundColor: feature.color },
             ]}>
             <Icon name={feature.icon} size={24} color="white" />
           </View>
-          <View style={styles.featureContent}>
-            <Text style={styles.featureTitle}>{feature.title}</Text>
-            <Text style={styles.featureDescription}>{feature.description}</Text>
+          <View style={styles(theme).featureContent}>
+            <Text style={styles(theme).featureTitle}>{feature.title}</Text>
+            <Text style={styles(theme).featureDescription}>{feature.description}</Text>
           </View>
           <Icon name="chevron-right" size={24} color="#ccc" />
         </TouchableOpacity>
@@ -262,11 +262,11 @@ const HomeScreen = () => {
   );
 
   const renderBlogPosts = () => (
-    <View style={styles.blogSection}>
-      <View style={styles.sectionTitleRow}>
+    <View style={styles(theme).blogSection}>
+      <View style={styles(theme).sectionTitleRow}>
         <Text
           style={[
-            styles.sectionTitle,
+            styles(theme).sectionTitle,
             {
               color: theme.colors.primary,
               fontFamily: theme.fonts.medium.fontFamily,
@@ -275,7 +275,7 @@ const HomeScreen = () => {
           Knowledge Sharing Blogs
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate("Blogs")}>
-          <Text style={{ color: theme.colors.primary }}>View All</Text>
+          <Text style={{ color: theme.colors.primary, fontFamily: theme.fonts.medium.fontFamily, }}>View All</Text>
         </TouchableOpacity>
       </View>
 
@@ -287,20 +287,20 @@ const HomeScreen = () => {
         blogPosts.map((post) => (
           <TouchableOpacity
             key={post.id}
-            style={styles.blogItem}
+            style={styles(theme).blogItem}
             onPress={() => {
               navigation.navigate("BlogDetailed", { postId: post.id });
             }}>
             <Image
               source={bannerImage}
-              style={styles.blogThumbnail}
+              style={styles(theme).blogThumbnail}
             />
-            <View style={styles.blogContent}>
-              <Text style={styles.blogTitle}>{post.title}</Text>
-              <Text style={styles.blogExcerpt} numberOfLines={2}>
+            <View style={styles(theme).blogContent}>
+              <Text style={styles(theme).blogTitle}>{post.title}</Text>
+              <Text style={styles(theme).blogExcerpt} numberOfLines={2}>
                 {post.excerpt}
               </Text>
-              <Text style={styles.blogDate}>{post.date}</Text>
+              <Text style={styles(theme).blogDate}>{post.date}</Text>
             </View>
           </TouchableOpacity>
         ))
@@ -309,10 +309,10 @@ const HomeScreen = () => {
   );
 
   const renderMembershipPlans = () => (
-    <View style={styles.membershipSection}>
+    <View style={styles(theme).membershipSection}>
       <Text
         style={[
-          styles.sectionTitle,
+          styles(theme).sectionTitle,
           {
             color: theme.colors.primary,
             fontFamily: theme.fonts.medium.fontFamily,
@@ -320,7 +320,7 @@ const HomeScreen = () => {
         ]}>
         Membership Plans
       </Text>
-
+  
       {loading ? (
         <Text>Loading membership plans...</Text>
       ) : error ? (
@@ -329,36 +329,39 @@ const HomeScreen = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.membershipScroll}>
+          contentContainerStyle={styles(theme).membershipScroll}>
           {membershipPlans.map((plan) => (
-            <Card key={plan.id} style={styles.membershipCard}>
+            <Card key={plan.id} style={styles(theme).membershipCard}>
               <Card.Content>
-                <Title style={styles.membershipName}>{plan.name}</Title>
-                <Title style={styles.membershipPrice}>{plan.price}</Title>
-
+                <Title style={styles(theme).membershipName}>{plan.name}</Title>
+                <Title style={styles(theme).membershipPrice}>{plan.price}</Title>
+  
                 {plan.features.map((feature, idx) => (
-                  <View key={idx} style={styles.membershipFeature}>
+                  <View key={idx} style={styles(theme).membershipFeature}>
                     <Icon
                       name="check-circle"
                       size={16}
                       color={theme.colors.primary}
                     />
-                    <Text style={styles.membershipFeatureText}>{feature}</Text>
+                    <Text style={styles(theme).membershipFeatureText}>{feature}</Text>
                   </View>
                 ))}
-
-                <Button
-                  mode={plan.price === "699,000 VND" ? "outlined" : "contained"}
-                  style={styles.membershipButton}
-                  labelStyle={{
-                    color:
-                      plan.price === "699,000 VND"
-                        ? theme.colors.primary
-                        : "white",
-                  }}
-                  onPress={() => { }}>
-                  {plan.price === "699,000 VND" ? "Sign Up" : "Upgrade"}
-                </Button>
+  
+                {user?.role === 0 && (
+                  <Button
+                    mode="contained"
+                    style={styles(theme).membershipButton}
+                    labelStyle={{
+                      color: "white"
+                    }}
+                    onPress={() =>
+                      navigation.navigate("MembershipDetails", {
+                        membershipId: plan.id,
+                      })
+                    }>
+                    Upgrade
+                  </Button>
+                )}
               </Card.Content>
             </Card>
           ))}
@@ -368,11 +371,11 @@ const HomeScreen = () => {
   );
 
   const renderFAQSection = () => (
-    <View style={styles.faqSection}>
-      <View style={styles.sectionTitleRow}>
+    <View style={styles(theme).faqSection}>
+      <View style={styles(theme).sectionTitleRow}>
         <Text
           style={[
-            styles.sectionTitle,
+            styles(theme).sectionTitle,
             {
               color: theme.colors.primary,
               fontFamily: theme.fonts.medium.fontFamily,
@@ -381,20 +384,20 @@ const HomeScreen = () => {
           FAQs
         </Text>
         <TouchableOpacity onPress={() => navigation.navigate("FAQs")}>
-          <Text style={{ color: theme.colors.primary }}>View All</Text>
+          <Text style={{ color: theme.colors.primary, fontFamily: theme.fonts.medium.fontFamily, }}>View All</Text>
         </TouchableOpacity>
       </View>
 
       {faqs.map((faq) => (
         <TouchableOpacity
           key={faq.id}
-          style={styles.faqItem}
+          style={styles(theme).faqItem}
           onPress={() => toggleFaq(faq.id)}
           activeOpacity={0.7}>
-          <View style={styles.faqContent}>
+          <View style={styles(theme).faqContent}>
             <Text
               style={[
-                styles.faqQuestion,
+                styles(theme).faqQuestion,
                 expandedFaqs[faq.id]
                   ? { marginBottom: 0 }
                   : { marginBottom: 4 },
@@ -402,8 +405,8 @@ const HomeScreen = () => {
               {faq.question}
             </Text>
             {expandedFaqs[faq.id] && (
-              <Animated.View style={styles.faqAnswerContainer}>
-                <Text style={styles.faqAnswer}>{faq.answer}</Text>
+              <Animated.View style={styles(theme).faqAnswerContainer}>
+                <Text style={styles(theme).faqAnswer}>{faq.answer}</Text>
               </Animated.View>
             )}
           </View>
@@ -418,14 +421,14 @@ const HomeScreen = () => {
   );
 
   const renderCallToAction = () => (
-    <View style={styles.ctaSection}>
-      <Card style={styles.ctaCard}>
-        <Card.Content style={styles.ctaContent}>
+    <View style={styles(theme).ctaSection}>
+      <Card style={styles(theme).ctaCard}>
+        <Card.Content style={styles(theme).ctaContent}>
           <View>
-            <Title style={styles.ctaTitle}>
+            <Title style={styles(theme).ctaTitle}>
               Ready to track your child's development?
             </Title>
-            <Paragraph style={styles.ctaText}>
+            <Paragraph style={styles(theme).ctaText}>
               Sign up today to start tracking your child's growth
               scientifically.
             </Paragraph>
@@ -442,9 +445,9 @@ const HomeScreen = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={styles(theme).container}>
       <DynamicHeader value={scrollOffsetY} title={"Home"} />
-      <View style={styles.scrollViewWrapper}>
+      <View style={styles(theme).scrollViewWrapper}>
         <ScrollView
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
@@ -452,7 +455,7 @@ const HomeScreen = () => {
             [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
             { useNativeDriver: false }
           )}
-          contentContainerStyle={styles.scrollViewContent}>
+          contentContainerStyle={styles(theme).scrollViewContent}>
           {renderHeroSection()}
           {renderAppInfo()}
           {renderFeatureHighlights()}
@@ -466,7 +469,8 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = (theme) =>
+  StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -484,8 +488,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
     marginBottom: 12,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   sectionTitleRow: {
     flexDirection: "row",
@@ -506,12 +510,13 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   heroDescription: {
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   appInfoSection: {
     paddingHorizontal: 16,
@@ -520,6 +525,7 @@ const styles = StyleSheet.create({
   appInfoText: {
     marginBottom: 8,
     lineHeight: 20,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   featuresSection: {
     paddingHorizontal: 16,
@@ -544,12 +550,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
-    fontWeight: "500",
     fontSize: 16,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   featureDescription: {
     color: "#666",
     fontSize: 12,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   blogSection: {
     paddingHorizontal: 16,
@@ -573,18 +580,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   blogTitle: {
-    fontWeight: "500",
     fontSize: 14,
     marginBottom: 4,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   blogExcerpt: {
     fontSize: 12,
     color: "#444",
     marginBottom: 4,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   blogDate: {
     color: "#666",
     fontSize: 12,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   membershipSection: {
     paddingHorizontal: 16,
@@ -600,13 +609,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
   },
   membershipName: {
-    fontWeight: "bold",
+    fontFamily: theme.fonts.medium.fontFamily,
     fontSize: 20,
     marginBottom: 6,
   },
   membershipPrice: {
     fontSize: 22,
     marginBottom: 16,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   membershipFeature: {
     flexDirection: "row",
@@ -616,6 +626,7 @@ const styles = StyleSheet.create({
   membershipFeatureText: {
     marginLeft: 8,
     fontSize: 14,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   membershipButton: {
     marginTop: 12,
@@ -638,7 +649,7 @@ const styles = StyleSheet.create({
   },
   faqQuestion: {
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: theme.fonts.medium.fontFamily,
     marginBottom: 4,
   },
   faqAnswerContainer: {
@@ -653,6 +664,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
     borderLeftColor: "#4682B4",
     paddingBottom: 4,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   ctaSection: {
     paddingHorizontal: 16,
@@ -672,11 +684,13 @@ const styles = StyleSheet.create({
   ctaTitle: {
     fontSize: 16,
     marginBottom: 6,
+    fontFamily: theme.fonts.medium.fontFamily,
   },
   ctaText: {
     fontSize: 13,
     color: "#444",
     width: "80%",
+    fontFamily: theme.fonts.medium.fontFamily,
   },
 });
 

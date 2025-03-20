@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     View,
     ScrollView,
     Text,
     StyleSheet,
-    Dimensions,
     TouchableOpacity,
     ActivityIndicator,
 } from "react-native";
@@ -12,17 +11,14 @@ import {
     useTheme,
     Card,
     Title,
-    Paragraph,
     Button,
     Portal,
     Modal,
 } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import api from "../../../configs/api";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { useSelector } from "react-redux";
-
-const windowWidth = Dimensions.get("window").width;
 
 const DoctorConsultationHistory = () => {
     const theme = useTheme();
@@ -37,11 +33,11 @@ const DoctorConsultationHistory = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const pageSize = 5;
 
-    useEffect(() => {
-        if (user && user._id) {
+    useFocusEffect(
+        useCallback(() => {
             fetchConsultationHistory();
-        }
-    }, [user, currentPage]);
+        }, [user, currentPage])
+    )
 
     const fetchConsultationHistory = async () => {
         try {
@@ -68,7 +64,7 @@ const DoctorConsultationHistory = () => {
                 const acceptedConsultations = response.data.consultations.filter(
                     (consultation) =>
                         consultation.requestDetails &&
-                        consultation.requestDetails.status === "Accepted"
+                        consultation.requestDetails?.status === "Accepted"
                 );
 
                 const requestIdMap = new Map();
@@ -96,7 +92,6 @@ const DoctorConsultationHistory = () => {
                 showSnackbar("Failed to load consultation history", 5000, "Close");
             }
         } catch (error) {
-            console.error("Error fetching consultation history:", error);
             showSnackbar("Failed to load consultation history", 5000, "Close");
         } finally {
             setLoading(false);
@@ -193,7 +188,7 @@ const DoctorConsultationHistory = () => {
 
     const renderConsultationItem = (item) => {
         const statusText =
-            item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase();
+            item?.status.charAt(0).toUpperCase() + item?.status.slice(1).toLowerCase();
         const statusColor = getStatusColor(item.status);
         const child = item.requestDetails?.children?.[0] || {};
         const member = item.requestDetails?.member || {};
@@ -490,10 +485,10 @@ const DoctorConsultationHistory = () => {
                                         <Text
                                             style={[
                                                 styles(theme).detailValue,
-                                                { color: getStatusColor(selectedConsultation.status) },
+                                                { color: getStatusColor(selectedConsultation?.status) },
                                             ]}>
-                                            {selectedConsultation.status.charAt(0).toUpperCase() +
-                                                selectedConsultation.status.slice(1).toLowerCase()}
+                                            {selectedConsultation?.status.charAt(0).toUpperCase() +
+                                                selectedConsultation?.status.slice(1).toLowerCase()}
                                         </Text>
 
                                         <Text style={styles(theme).detailLabel}>
@@ -590,6 +585,7 @@ const styles = (theme) =>
         emptyText: {
             color: "#757575",
             fontSize: 16,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         consultationCard: {
             marginBottom: 15,
@@ -606,28 +602,31 @@ const styles = (theme) =>
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 10,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         doctorName: {
             color: theme.colors.primary,
             fontSize: 18,
-            fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         statusText: {
-            fontWeight: "500",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         consultationDetails: {
             marginVertical: 10,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         detailLabel: {
-            fontWeight: "600",
             fontSize: 14,
             color: "#333",
             marginTop: 6,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         detailValue: {
             fontSize: 14,
             color: "#555",
             marginBottom: 2,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         viewDetailsButton: {
             marginTop: 10,
@@ -636,7 +635,7 @@ const styles = (theme) =>
         },
         buttonText: {
             color: "white",
-            fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         paginationContainer: {
             flexDirection: "row",
@@ -659,33 +658,35 @@ const styles = (theme) =>
         },
         paginationText: {
             color: "#333",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         paginationTextActive: {
             color: "#fff",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         modalContainer: {
             backgroundColor: "white",
             padding: 20,
             margin: 15,
             borderRadius: 8,
-            maxHeight: "85%", // Limits modal height to 85% of screen
+            maxHeight: "70%",
         },
         modalScrollContainer: {
-            paddingBottom: 20, // Adds padding at the bottom for better scroll experience
+            paddingBottom: 20,
         },
         modalTitle: {
             fontSize: 22,
             color: theme.colors.primary,
-            fontWeight: "700",
             marginBottom: 15,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         modalContent: {
             paddingHorizontal: 5,
         },
         modalSubtitle: {
             fontSize: 18,
-            fontWeight: "600",
             marginBottom: 10,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         modalFooter: {
             flexDirection: "row",
@@ -702,6 +703,7 @@ const styles = (theme) =>
         },
         cancelButtonText: {
             color: theme.colors.primary,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         startConsultationButton: {
             flex: 1,
@@ -715,6 +717,7 @@ const styles = (theme) =>
             fontSize: 18,
             color: theme.colors.primary,
             marginBottom: 15,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         growthVelocityWrapper: {
             borderWidth: 1,
@@ -732,17 +735,18 @@ const styles = (theme) =>
         },
         periodTitle: {
             fontSize: 18,
-            fontWeight: "700",
             color: "white",
             backgroundColor: "#0056A1",
             padding: 8,
             borderRadius: 4,
             alignSelf: "flex-start",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         periodDate: {
             fontSize: 14,
             color: "#666",
             marginTop: 5,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricsRowContainer: {
             flexDirection: "row",
@@ -770,21 +774,23 @@ const styles = (theme) =>
         },
         metricTitle: {
             fontSize: 16,
-            fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricLabel: {
             fontSize: 14,
             color: "#666",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricValue: {
             fontSize: 24,
-            fontWeight: "700",
+            fontFamily: theme.fonts.medium.fontFamily,
             marginBottom: 10,
         },
         insufficientData: {
             fontSize: 16,
             color: "#666",
             fontStyle: "italic",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         percentileInfoContainer: {
             marginTop: 15,
@@ -796,7 +802,7 @@ const styles = (theme) =>
         },
         percentileInfoTitle: {
             fontSize: 16,
-            fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
             color: "#0056A1",
             marginBottom: 5,
         },
@@ -804,6 +810,7 @@ const styles = (theme) =>
             fontSize: 14,
             color: "#333",
             marginTop: 8,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
     });
 

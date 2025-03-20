@@ -21,7 +21,6 @@ const GrowthDataDetails = () => {
       const response = await api.get(`/children/${childId}/growth-data/${growthDataId}`);
       setGrowthData(response.data.growthData);
     } catch (error) {
-      console.error("Failed to fetch growth data:", error);
       showSnackbar(
         error.response?.data?.message || "Failed to fetch growth data. Please try again.",
         5000,

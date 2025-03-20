@@ -30,6 +30,14 @@ import Title from "../components/Title";
 import CreateGrowthData from "../components/GrowthData/CreateGrowthData";
 import UpdateGrowthData from "../components/GrowthData/UpdateGrowthData";
 import { LineChart } from "react-native-chart-kit";
+import { useSelector } from "react-redux";
+
+
+const calculateBMI = (weight, height) => {
+  if (!weight || !height) return 0; 
+  const heightInMeters = height / 100; 
+  return parseFloat((weight / (heightInMeters * heightInMeters)).toFixed(2));
+};
 
 const ChildDetails = () => {
   const theme = useTheme();
@@ -49,6 +57,7 @@ const ChildDetails = () => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [selectedGrowthData, setSelectedGrowthData] = useState(null);
   const [chartGrowthData, setChartGrowthData] = useState([]);
+  const { user } = useSelector((state) => state.auth);
 
   const fetchChildData = async () => {
     try {
@@ -56,7 +65,6 @@ const ChildDetails = () => {
       const response = await api.get(`/children/${childId}`);
       setChild(response.data.child);
     } catch (error) {
-      console.error("Failed to fetch child data:", error);
       showSnackbar(
         error.message || "Failed to fetch child data. Please try again.",
         5000,
@@ -73,10 +81,14 @@ const ChildDetails = () => {
       const response = await api.get(
         `/children/${childId}/growth-data?order=${order}&page=${page}&size=${size}`
       );
-      setGrowthData(response.data.growthData);
+      
+      const enrichedGrowthData = response.data.growthData.map((data) => ({
+        ...data,
+        bmi: calculateBMI(data.weight, data.height),
+      }));
+      setGrowthData(enrichedGrowthData);
       setTotalPages(response.data.totalPages);
     } catch (error) {
-      console.error("Failed to fetch growth data:", error);
       showSnackbar(
         error.message || "Failed to fetch growth data. Please try again.",
         5000,
@@ -93,9 +105,13 @@ const ChildDetails = () => {
       const response = await api.get(
         `/children/${childId}/growth-data?order=ascending`
       );
-      setChartGrowthData(response.data.growthData);
+      
+      const enrichedChartData = response.data.growthData.map((data) => ({
+        ...data,
+        bmi: calculateBMI(data.weight, data.height),
+      }));
+      setChartGrowthData(enrichedChartData);
     } catch (error) {
-      console.error("Failed to fetch growth data:", error);
       showSnackbar(
         error.message || "Failed to fetch growth data. Please try again.",
         5000,
@@ -116,7 +132,6 @@ const ChildDetails = () => {
       fetchGrowthData();
       setIsDeleteModalVisible(false);
     } catch (error) {
-      console.error("Failed to delete growth data:", error);
       showSnackbar(
         error.response?.data?.message ||
           "Failed to delete growth data. Please try again.",
@@ -169,7 +184,6 @@ const ChildDetails = () => {
     return acc;
   }, {});
 
-  
   const chartConfig = {
     backgroundColor: "#ffffff",
     backgroundGradientFrom: "#f9f9f9",
@@ -181,7 +195,7 @@ const ChildDetails = () => {
     style: {
       borderRadius: 8,
       fontSize: 10,
-      background: "black"
+      background: "black",
     },
     propsForDots: {
       r: "6",
@@ -190,37 +204,38 @@ const ChildDetails = () => {
     },
   };
 
-  
-  const labels = chartGrowthData.map((data) => format(new Date(data.inputDate), "MM/dd/yy")); 
+  const labels = chartGrowthData.map((data) =>
+    format(new Date(data.inputDate), "MM/dd/yy")
+  );
   const metrics = [
     {
       label: "Weight (kg)",
       data: chartGrowthData.map((data) => data.weight || 0),
-      color: "#FF6347", 
+      color: "#FF6347",
       yAxisSuffix: " kg",
     },
     {
       label: "Height (cm)",
       data: chartGrowthData.map((data) => data.height || 0),
-      color: "#32CD32", 
+      color: "#32CD32",
       yAxisSuffix: " cm",
     },
     {
       label: "BMI (kg/m²)",
       data: chartGrowthData.map((data) => data.bmi || 0),
-      color: "#1E90FF", 
+      color: "#1E90FF",
       yAxisSuffix: " kg/m²",
     },
     {
       label: "Head Circumference (cm)",
       data: chartGrowthData.map((data) => data.headCircumference || 0),
-      color: "#FFD700", 
+      color: "#FFD700",
       yAxisSuffix: " cm",
     },
     {
       label: "Arm Circumference (cm)",
       data: chartGrowthData.map((data) => data.armCircumference || 0),
-      color: "#FFA500", 
+      color: "#FFA500",
       yAxisSuffix: " cm",
     },
   ];
@@ -248,41 +263,9 @@ const ChildDetails = () => {
             <Text style={styles.birthDate(theme)}>{formattedBirthDate}</Text>
             <Image source={genderIcon} style={styles.genderIcon} />
           </View>
-          <Divider style={{ marginVertical: 16 }} />
-          <View style={styles.gridContainer}>
-            <View style={styles.gridRow}>
-              <Text variant="medium" style={styles.gridLabel(theme)}>
-                Feeding Type
-              </Text>
-              <Text style={styles.gridValue(theme)}>
-                {child.feedingType || "N/A"}
-              </Text>
-            </View>
-            <View style={styles.gridRow}>
-              <Text variant="medium" style={styles.gridLabel(theme)}>
-                Allergies
-              </Text>
-              <View style={styles.allergiesContainer}>
-                {child.allergies && child.allergies.length > 0 ? (
-                  child.allergies.map((allergy, index) => (
-                    <View key={index} style={styles.allergyItem}>
-                      <Text style={styles.gridValue(theme)}>
-                        {allergy === "NONE"
-                          ? "None"
-                          : allergy === "N/A"
-                          ? "N/A"
-                          : allergy
-                              .replace(/_/g, " ")
-                              .toLowerCase()
-                              .replace(/\b\w/g, (c) => c.toUpperCase())}
-                      </Text>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.gridValue(theme)}>N/A</Text>
-                )}
-              </View>
-            </View>
+          <View style={styles.noteContainer}>
+            <Title text="Feeding Type" style={styles.noteTitle(theme)} />
+            <Text style={styles.note(theme)}>{child.feedingType || "N/A"}</Text>
           </View>
           <View style={styles.noteContainer}>
             <Title text="Note" style={styles.noteTitle(theme)} />
@@ -305,10 +288,9 @@ const ChildDetails = () => {
         </View>
       ),
     },
-    
     {
       title: "Growth Trends",
-      data: [{}], 
+      data: [{}],
       renderItem: () =>
         chartGrowthData.length > 0 ? (
           <View style={styles.chartContainer}>
@@ -365,7 +347,7 @@ const ChildDetails = () => {
                   Height: {item.height} cm
                 </Text>
                 <Text style={styles.itemText(theme)}>
-                  BMI: {item.bmi ? item.bmi + " kg/m²" : "N/A"}
+                  BMI: {item.bmi} kg/m²
                 </Text>
                 <Text style={styles.itemText(theme)}>
                   Head Circumference:{" "}
@@ -380,26 +362,28 @@ const ChildDetails = () => {
                     : "N/A"}
                 </Text>
               </TouchableOpacity>
-              <View style={styles.actionButtons}>
-                <IconButton
-                  icon="pencil"
-                  size={24}
-                  iconColor={theme.colors.primary}
-                  onPress={() => {
-                    setSelectedGrowthData(item);
-                    setIsUpdateModalVisible(true);
-                  }}
-                />
-                <IconButton
-                  icon="delete"
-                  size={24}
-                  iconColor={theme.colors.error}
-                  onPress={() => {
-                    setSelectedGrowthData(item);
-                    setIsDeleteModalVisible(true);
-                  }}
-                />
-              </View>
+              {user?.role === 0 && (
+                <View style={styles.actionButtons}>
+                  <IconButton
+                    icon="pencil"
+                    size={24}
+                    iconColor={theme.colors.primary}
+                    onPress={() => {
+                      setSelectedGrowthData(item);
+                      setIsUpdateModalVisible(true);
+                    }}
+                  />
+                  <IconButton
+                    icon="delete"
+                    size={24}
+                    iconColor={theme.colors.error}
+                    onPress={() => {
+                      setSelectedGrowthData(item);
+                      setIsDeleteModalVisible(true);
+                    }}
+                  />
+                </View>
+              )}
             </View>
           ),
         }))
@@ -482,12 +466,14 @@ const ChildDetails = () => {
         }
       />
 
-      <FAB
-        style={styles.fab(theme)}
-        icon="plus"
-        color="white"
-        onPress={() => setIsCreateModalVisible(true)}
-      />
+      {user?.role === 0 && (
+        <FAB
+          style={styles.fab(theme)}
+          icon="plus"
+          color="white"
+          onPress={() => setIsCreateModalVisible(true)}
+        />
+      )}
 
       <CreateGrowthData
         visible={isCreateModalVisible}
@@ -587,16 +573,14 @@ const styles = {
     color: "#666",
     fontFamily: theme.fonts.medium.fontFamily,
   }),
-  allergiesContainer: { flexDirection: "column" },
-  allergyItem: { marginBottom: 4 },
   noteContainer: { marginTop: 16 },
   noteTitle: (theme) => ({
     textAlign: "left",
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: theme.fonts.medium.fontFamily,
   }),
   note: (theme) => ({
-    fontSize: 16,
+    fontSize: 14,
     color: "#666",
     lineHeight: 24,
     fontFamily: theme.fonts.medium.fontFamily,
@@ -621,6 +605,7 @@ const styles = {
     marginTop: 8,
   },
   noDataText: (theme) => ({
+    paddingVertical: 16,
     fontSize: 16,
     color: "#666",
     fontFamily: theme.fonts.medium.fontFamily,

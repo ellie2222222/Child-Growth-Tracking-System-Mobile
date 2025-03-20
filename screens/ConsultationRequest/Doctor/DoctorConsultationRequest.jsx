@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     View,
     ScrollView,
@@ -15,7 +15,7 @@ import {
     Portal,
     Modal,
 } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import api from "../../../configs/api";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { useSelector } from "react-redux";
@@ -36,11 +36,11 @@ const DoctorConsultationRequest = () => {
     const pageSize = 5;
 
 
-    useEffect(() => {
-        if (user && user._id) {
+    useFocusEffect(
+        useCallback(() => {
             fetchConsultations();
-        }
-    }, [user, currentPage]);
+        }, [user, currentPage])
+    );
 
 
     const fetchConsultations = async () => {
@@ -73,7 +73,6 @@ const DoctorConsultationRequest = () => {
                 showSnackbar("Failed to load consultation requests", 5000, "Close");
             }
         } catch (error) {
-            console.error("Error fetching consultations:", error);
             showSnackbar("Failed to load consultation requests", 5000, "Close");
         } finally {
             setLoading(false);
@@ -101,7 +100,6 @@ const DoctorConsultationRequest = () => {
             setModalVisible(false);
             fetchConsultations();
         } catch (error) {
-            console.error(`Error updating status to ${newStatus}:`, error);
             showSnackbar(`Failed to update request status`, 5000, "Close");
         } finally {
             setLoading(false);
@@ -193,9 +191,7 @@ const DoctorConsultationRequest = () => {
 
 
     const renderConsultationItem = (item) => {
-        console.log("Consultation Item:", item);
-
-        const statusText = item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase() : "Unknown";
+        const statusText = item.status ? item.status?.charAt(0).toUpperCase() + item.status?.slice(1).toLowerCase() : "Unknown";
         const statusColor = getStatusColor(item.status || "");
 
         const title = item.title || "Untitled Consultation";
@@ -244,6 +240,18 @@ const DoctorConsultationRequest = () => {
 
                     <Button
                         mode="contained"
+                        onPress={() => {
+                                navigation.navigate("ChildDetails", { childId: item.childIds[0] })
+                            }
+                        }
+                        style={styles(theme).viewDetailsButton}
+                        labelStyle={styles(theme).buttonText}
+                        >
+                        View Child Details
+                    </Button>
+
+                    <Button
+                        mode="contained"
                         onPress={() => handleViewDetails(item)}
                         style={styles(theme).viewDetailsButton}
                         labelStyle={styles(theme).buttonText}>
@@ -270,7 +278,7 @@ const DoctorConsultationRequest = () => {
                 </View>
 
                 <View style={styles(theme).metricsRowContainer}>
-                    {/* Weight Card */}
+                   
                     <Card style={styles(theme).metricCard}>
                         <Card.Content>
                             <View style={styles(theme).metricHeader}>
@@ -305,7 +313,7 @@ const DoctorConsultationRequest = () => {
                         </Card.Content>
                     </Card>
 
-                    {/* Height Card */}
+                   
                     <Card style={styles(theme).metricCard}>
                         <Card.Content>
                             <View style={styles(theme).metricHeader}>
@@ -340,7 +348,7 @@ const DoctorConsultationRequest = () => {
                         </Card.Content>
                     </Card>
 
-                    {/* Head Circumference Card */}
+                   
                     <Card style={styles(theme).metricCard}>
                         <Card.Content>
                             <View style={styles(theme).metricHeader}>
@@ -381,7 +389,7 @@ const DoctorConsultationRequest = () => {
                     </Card>
                 </View>
 
-                {/* Percentile Information */}
+               
                 {(result.weight.description &&
                     result.weight.description.includes("percentile")) ||
                     (result.height.description &&
@@ -441,7 +449,7 @@ const DoctorConsultationRequest = () => {
             </Card>
 
 
-            {/* Details Modal */}
+           
             <Portal>
                 <Modal
                     visible={modalVisible}
@@ -478,8 +486,8 @@ const DoctorConsultationRequest = () => {
                                         <Text style={styles(theme).detailValue}>{selectedConsultation.doctor?.name || "Unknown"}</Text>
 
                                         <Text style={styles(theme).detailLabel}>Status:</Text>
-                                        <Text style={[styles(theme).detailValue, { color: getStatusColor(selectedConsultation.status) }]}>
-                                            {selectedConsultation.status}
+                                        <Text style={[styles(theme).detailValue, { color: getStatusColor(selectedConsultation?.status) }]}>
+                                            {selectedConsultation?.status}
                                         </Text>
 
                                         <Text style={styles(theme).detailLabel}>Request Title:</Text>
@@ -493,7 +501,7 @@ const DoctorConsultationRequest = () => {
                                         <Text style={styles(theme).detailValue}>{formatDate(selectedConsultation.updatedAt)}</Text>
                                     </View>
 
-                                    {/* Growth Velocity Results */}
+                                   
                                     {selectedConsultation.children[0]
                                         .growthVelocityResult && (
                                             <View style={styles(theme).growthVelocityContainer}>
@@ -513,8 +521,8 @@ const DoctorConsultationRequest = () => {
 
                             )}
                     </ScrollView>
-                    {selectedConsultation.status?.toLowerCase() !== "accepted" &&
-                        selectedConsultation.status?.toLowerCase() !== "rejected" && (
+                    {selectedConsultation?.status?.toLowerCase() !== "accepted" &&
+                        selectedConsultation?.status?.toLowerCase() !== "rejected" && (
                             <View style={styles(theme).modalFooter}>
                                 <Button
                                     mode="outlined"
@@ -570,6 +578,7 @@ const styles = (theme) =>
         emptyText: {
             color: "#757575",
             fontSize: 16,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         consultationCard: {
             marginBottom: 15,
@@ -591,9 +600,11 @@ const styles = (theme) =>
             color: theme.colors.primary,
             fontSize: 18,
             fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         statusText: {
             fontWeight: "500",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         consultationDetails: {
             marginVertical: 10,
@@ -603,11 +614,13 @@ const styles = (theme) =>
             fontSize: 14,
             color: "#333",
             marginTop: 6,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         detailValue: {
             fontSize: 14,
             color: "#555",
             marginBottom: 2,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         viewDetailsButton: {
             marginTop: 10,
@@ -616,7 +629,7 @@ const styles = (theme) =>
         },
         buttonText: {
             color: "white",
-            fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         paginationContainer: {
             flexDirection: "row",
@@ -639,25 +652,27 @@ const styles = (theme) =>
         },
         paginationText: {
             color: "#333",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         paginationTextActive: {
             color: "#fff",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         modalContainer: {
             backgroundColor: "white",
             padding: 20,
             margin: 15,
             borderRadius: 8,
-            maxHeight: "85%", // Limits modal height to 85% of screen
+            maxHeight: "70%",
         },
         modalScrollContainer: {
-            paddingBottom: 20, // Adds padding at the bottom for better scroll experience
+            paddingBottom: 20,
         },
         modalTitle: {
             fontSize: 22,
             color: theme.colors.primary,
-            fontWeight: "700",
             marginBottom: 15,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         modalContent: {
             paddingHorizontal: 5,
@@ -666,6 +681,7 @@ const styles = (theme) =>
             fontSize: 18,
             fontWeight: "600",
             marginBottom: 10,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         modalFooter: {
             flexDirection: "row",
@@ -682,6 +698,7 @@ const styles = (theme) =>
         },
         cancelButtonText: {
             color: theme.colors.primary,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         startConsultationButton: {
             flex: 1,
@@ -695,6 +712,7 @@ const styles = (theme) =>
             fontSize: 18,
             color: theme.colors.primary,
             marginBottom: 15,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         growthVelocityWrapper: {
             borderWidth: 1,
@@ -712,17 +730,18 @@ const styles = (theme) =>
         },
         periodTitle: {
             fontSize: 18,
-            fontWeight: "700",
             color: "white",
             backgroundColor: "#0056A1",
             padding: 8,
             borderRadius: 4,
             alignSelf: "flex-start",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         periodDate: {
             fontSize: 14,
             color: "#666",
             marginTop: 5,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricsRowContainer: {
             flexDirection: "row",
@@ -741,6 +760,7 @@ const styles = (theme) =>
             flexDirection: "row",
             alignItems: "center",
             marginBottom: 10,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricIndicator: {
             width: 16,
@@ -750,21 +770,24 @@ const styles = (theme) =>
         },
         metricTitle: {
             fontSize: 16,
-            fontWeight: "600",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricLabel: {
             fontSize: 14,
             color: "#666",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         metricValue: {
             fontSize: 24,
             fontWeight: "700",
             marginBottom: 10,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         insufficientData: {
             fontSize: 16,
             color: "#666",
             fontStyle: "italic",
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         percentileInfoContainer: {
             marginTop: 15,
@@ -779,11 +802,13 @@ const styles = (theme) =>
             fontWeight: "600",
             color: "#0056A1",
             marginBottom: 5,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
         percentileInfoText: {
             fontSize: 14,
             color: "#333",
             marginTop: 8,
+            fontFamily: theme.fonts.medium.fontFamily,
         },
     });
 

@@ -96,7 +96,6 @@ const MemberConsultationHistory = () => {
         showSnackbar("Failed to load consultation history", 5000, "Close");
       }
     } catch (error) {
-      console.error("Error fetching consultation history:", error);
       showSnackbar("Failed to load consultation history", 5000, "Close");
     } finally {
       setLoading(false);
@@ -663,10 +662,10 @@ const styles = (theme) =>
       padding: 20,
       margin: 15,
       borderRadius: 8,
-      maxHeight: "85%", // Limits modal height to 85% of screen
+      maxHeight: "70%",
     },
     modalScrollContainer: {
-      paddingBottom: 20, // Adds padding at the bottom for better scroll experience
+      paddingBottom: 20,
     },
     modalTitle: {
       fontSize: 22,

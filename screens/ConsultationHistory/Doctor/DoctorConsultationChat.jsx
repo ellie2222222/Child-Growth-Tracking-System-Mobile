@@ -28,7 +28,7 @@ const DoctorConsultationChat = () => {
     const [fetchLoading, setFetchLoading] = useState(false);
     const [sendLoading, setSendLoading] = useState(false);
     const [newMessage, setNewMessage] = useState("");
-    const [memberName, setMemberName] = useState(""); // Changed from doctorName
+    const [memberName, setMemberName] = useState(""); 
     const { consultationId } = route.params;
     const flatListRef = useRef(null);
 
@@ -58,7 +58,7 @@ const DoctorConsultationChat = () => {
                 })
             );
 
-            // Extract member's name from the consultation data
+            
             if (
                 processedMessages.length > 0 &&
                 processedMessages[0].consultation?.requestDetails?.member?.name
@@ -70,7 +70,6 @@ const DoctorConsultationChat = () => {
 
             setMessages(processedMessages);
         } catch (error) {
-            console.error("Error fetching messages:", error);
             showSnackbar("Failed to load messages", 5000, "Close");
         } finally {
             setFetchLoading(false);
@@ -102,7 +101,6 @@ const DoctorConsultationChat = () => {
             setMessages((prevMessages) => [...prevMessages, newMsg]);
             setNewMessage("");
         } catch (error) {
-            console.error("Error sending message:", error);
             showSnackbar("Failed to send message", 5000, "Close");
         } finally {
             setSendLoading(false);

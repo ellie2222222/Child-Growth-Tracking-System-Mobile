@@ -12,8 +12,8 @@ const windowWidth = Dimensions.get("window").width;
 
 const MemberConsultationRequest = () => {
   const theme = useTheme();
-  const { showSnackbar } = useSnackbar(); // Use the snackbar hook
-  const [selectedChildId, setSelectedChildId] = useState(null); // Lưu chỉ ID của đứa trẻ được chọn
+  const { showSnackbar } = useSnackbar(); 
+  const [selectedChildId, setSelectedChildId] = useState(null); 
   const [messageText, setMessageText] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [childrenData, setChildrenData] = useState([]);
@@ -26,7 +26,7 @@ const MemberConsultationRequest = () => {
   const [submitError, setSubmitError] = useState(null);
   const navigate = useNavigation();
 
-  // Fetch children data from the API
+  
   useEffect(() => {
     const fetchChildren = async () => {
       try {
@@ -51,7 +51,6 @@ const MemberConsultationRequest = () => {
 
         setChildrenData(fetchedChildren);
       } catch (err) {
-        console.error("Error fetching children:", err);
         setError(err.message || "Failed to fetch children");
       } finally {
         setLoading(false);
@@ -80,7 +79,7 @@ const MemberConsultationRequest = () => {
         }
 
         const fetchedDoctors = response.data.users
-          .filter((user) => user.role === 2)
+          .filter((user) => user?.role === 2)
           .map((doctor) => ({
             id: doctor._id,
             name: doctor.name,
@@ -88,7 +87,6 @@ const MemberConsultationRequest = () => {
 
         setDoctors(fetchedDoctors);
       } catch (err) {
-        console.error("Error fetching doctors:", err);
         setDoctorsError(err.message || "Failed to fetch doctors");
       } finally {
         setDoctorsLoading(false);
@@ -120,7 +118,7 @@ const MemberConsultationRequest = () => {
   };
 
   const handleSubmit = async () => {
-    // Validate inputs
+    
     if (!selectedChildId || !selectedDoctor || !messageText.trim()) {
       showSnackbar(
         "Please complete all fields before submitting.",
@@ -134,7 +132,7 @@ const MemberConsultationRequest = () => {
     setSubmitError(null);
 
     try {
-      // Tìm đứa trẻ đã chọn dựa trên ID
+      
       const selectedChild = childrenData.find(
         (child) => child.id === selectedChildId
       );
@@ -157,7 +155,6 @@ const MemberConsultationRequest = () => {
       setSelectedChildId(null);
       setSelectedDoctor(null);
     } catch (err) {
-      console.error("Error submitting consultation request:", err);
       const errorMessage =
         err.response?.data?.validationErrors?.error ||
         err.response?.data?.message ||
@@ -186,7 +183,7 @@ const MemberConsultationRequest = () => {
     );
   }
 
-  // Render loading or error states for doctors
+  
   if (doctorsLoading) {
     return (
       <View style={styles(theme).container}>
@@ -236,30 +233,6 @@ const MemberConsultationRequest = () => {
               boxStyles={styles(theme).dropdownBox}
               dropdownStyles={styles(theme).dropdown}
               disabled={submitLoading}
-            />
-          </View>
-
-          <View style={styles(theme).formItem}>
-            <Text style={styles(theme).label}>Growth Chart Preview</Text>
-            <LineChart
-              data={sampleChartData}
-              width={windowWidth - 60}
-              height={200}
-              chartConfig={{
-                backgroundColor: "#fff",
-                backgroundGradientFrom: "#fff",
-                backgroundGradientTo: "#fff",
-                decimalPlaces: 1,
-                color: (opacity = 1) => `rgba(0, 130, 200, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                style: { borderRadius: 8 },
-                propsForDots: {
-                  r: "6",
-                  strokeWidth: "2",
-                  stroke: theme.colors.primary,
-                },
-              }}
-              bezier
             />
           </View>
 
@@ -353,7 +326,7 @@ const styles = (theme) =>
     },
     submitButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 50,
+      borderRadius: 10,
       paddingVertical: 5,
       marginTop: 10,
     },

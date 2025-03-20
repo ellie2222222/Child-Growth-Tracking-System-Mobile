@@ -40,7 +40,7 @@ const CreateGrowthData = ({ visible, onClose, childId, fetchGrowthData }) => {
     try {
       setLoading(true);
       await api.post(`/children/${childId}/growth-data`, {
-        inputDate: values.inputDate.toISOString().split("T")[0],
+        inputDate: new Date(new Date(values.inputDate).setHours(0, 0, 0, 0)),
         height: parseFloat(values.height),
         weight: parseFloat(values.weight),
         headCircumference: values.headCircumference

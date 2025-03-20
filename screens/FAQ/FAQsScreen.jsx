@@ -60,7 +60,7 @@ export const FAQsScreen = () => {
     },
   ];
 
-  const styles = StyleSheet.create({
+  const styles = (theme) => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: "#fff",
@@ -74,15 +74,15 @@ export const FAQsScreen = () => {
     },
     headerTitle: {
       fontSize: 28,
-      fontWeight: "bold",
+      fontFamily: theme.fonts.medium.fontFamily,
       color: "#333",
       marginBottom: 8,
-      fontFamily: "GothamRnd-Medium",
     },
     headerDescription: {
       fontSize: 14,
       color: "#666",
       lineHeight: 20,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     faqSection: {
       marginBottom: 32,
@@ -101,7 +101,7 @@ export const FAQsScreen = () => {
     },
     faqQuestion: {
       fontSize: 16,
-      fontWeight: "500",
+      fontFamily: theme.fonts.medium.fontFamily,
       color: "#333",
       marginBottom: 8,
     },
@@ -117,6 +117,7 @@ export const FAQsScreen = () => {
       borderLeftWidth: 3,
       borderLeftColor: theme.colors.primary,
       paddingBottom: 4,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     ctaCard: {
       backgroundColor: "#f9f9ff",
@@ -137,7 +138,7 @@ export const FAQsScreen = () => {
     },
     ctaTitle: {
       fontSize: 16,
-      fontWeight: "500",
+      fontFamily: theme.fonts.medium.fontFamily,
       color: "#333",
       marginBottom: 8,
     },
@@ -146,46 +147,47 @@ export const FAQsScreen = () => {
       color: "#444",
       width: "70%",
       marginBottom: 16,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     ctaButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 50,
-      paddingHorizontal: 12,
+      borderRadius: 10,
+      paddingHorizontal: 15,
     },
   });
 
   return (
-    <View style={styles.container}>
+    <View style={styles(theme).container}>
       {/* ScrollView */}
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={styles(theme).scrollViewContent}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollOffsetY } } }],
           { useNativeDriver: false }
         )}
         scrollEventThrottle={16}>
         {/* Header Section */}
-        <View style={styles.headerSection}>
-          <Text style={styles.headerTitle}>Frequently Asked Questions</Text>
-          <Text style={styles.headerDescription}>
+        <View style={styles(theme).headerSection}>
+          <Text style={styles(theme).headerTitle}>Frequently Asked Questions</Text>
+          <Text style={styles(theme).headerDescription}>
             Find answers to common questions about using GrowEasy to track your
             child's development and more.
           </Text>
         </View>
 
         {/* FAQ Section */}
-        <View style={styles.faqSection}>
+        <View style={styles(theme).faqSection}>
           {faqs.map((faq) => (
             <TouchableOpacity
               key={faq.id}
-              style={styles.faqItem}
+              style={styles(theme).faqItem}
               onPress={() => toggleFaq(faq.id)}
               activeOpacity={0.7}>
-              <View style={styles.faqContent}>
+              <View style={styles(theme).faqContent}>
                 <Text
                   style={[
-                    styles.faqQuestion,
+                    styles(theme).faqQuestion,
                     expandedFaqs[faq.id]
                       ? { marginBottom: 0 }
                       : { marginBottom: 8 },
@@ -193,8 +195,8 @@ export const FAQsScreen = () => {
                   {faq.question}
                 </Text>
                 {expandedFaqs[faq.id] && (
-                  <Animated.View style={styles.faqAnswerContainer}>
-                    <Text style={styles.faqAnswer}>{faq.answer}</Text>
+                  <Animated.View style={styles(theme).faqAnswerContainer}>
+                    <Text style={styles(theme).faqAnswer}>{faq.answer}</Text>
                   </Animated.View>
                 )}
               </View>
@@ -208,18 +210,18 @@ export const FAQsScreen = () => {
         </View>
 
         {/* Call to Action */}
-        <Card style={styles.ctaCard}>
-          <Card.Content style={styles.ctaContent}>
+        <Card style={styles(theme).ctaCard}>
+          <Card.Content style={styles(theme).ctaContent}>
             <View>
-              <Text style={styles.ctaTitle}>Still have questions?</Text>
-              <Text style={styles.ctaText}>
+              <Text style={styles(theme).ctaTitle}>Still have questions?</Text>
+              <Text style={styles(theme).ctaText}>
                 Contact our support team for personalized assistance.
               </Text>
             </View>
             <Button
               mode="contained"
-              style={styles.ctaButton}
-              labelStyle={{ color: "white" }}
+              style={styles(theme).ctaButton}
+              labelStyle={{ color: "white", fontSize: 16 }}
               onPress={() => { }}>
               Contact Support
             </Button>

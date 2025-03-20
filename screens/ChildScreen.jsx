@@ -50,17 +50,6 @@ const GenderEnum = {
   GIRL: 1,
 };
 
-const AllergyEnum = {
-  NONE: "NONE",
-  N_A: "N/A",
-  DRUG_ALLERGY: "DRUG_ALLERGY",
-  FOOD_ALLERGY: "FOOD_ALLERGY",
-  LATEX_ALLERGY: "LATEX_ALLERGY",
-  MOLD_ALLERGY: "MOLD_ALLERGY",
-  PET_ALLERGY: "PET_ALLERGY",
-  POLLEN_ALLERGY: "POLLEN_ALLERGY",
-};
-
 const FeedingTypeEnum = {
   N_A: "N/A",
   BREASTFEEDING: "BREASTFEEDING",
@@ -86,9 +75,6 @@ const ChildSchema = Yup.object().shape({
   feedingType: Yup.string()
     .oneOf(Object.values(FeedingTypeEnum), "Invalid feeding type")
     .required("Feeding type is required"),
-  allergies: Yup.array()
-    .of(Yup.string().oneOf(Object.values(AllergyEnum), "Invalid allergy"))
-    .min(0, "Select at least one allergy or NONE/N_A"),
   relationship: Yup.string()
     .oneOf(Object.values(RelationshipEnum), "Invalid relationship")
     .required("Relationship is required"),
@@ -127,16 +113,6 @@ const ChildScreen = () => {
     { key: FeedingTypeEnum.SOLID_FOODS, value: "Solid Foods" },
   ];
 
-  const allergyOptions = [
-    { key: AllergyEnum.NONE, value: "NONE" },
-    { key: AllergyEnum.N_A, value: "N/A" },
-    { key: AllergyEnum.DRUG_ALLERGY, value: "DRUG_ALLERGY" },
-    { key: AllergyEnum.FOOD_ALLERGY, value: "FOOD_ALLERGY" },
-    { key: AllergyEnum.LATEX_ALLERGY, value: "LATEX_ALLERGY" },
-    { key: AllergyEnum.MOLD_ALLERGY, value: "MOLD_ALLERGY" },
-    { key: AllergyEnum.PET_ALLERGY, value: "PET_ALLERGY" },
-    { key: AllergyEnum.POLLEN_ALLERGY, value: "POLLEN_ALLERGY" },
-  ];
 
   const relationshipOptions = [
     { key: RelationshipEnum.PARENT, value: "Parent" },
@@ -171,7 +147,9 @@ const ChildScreen = () => {
     try {
       await api.post("/children", {
         ...values,
-        birthDate: format(values.birthDate, "yyyy-MM-dd"),
+        relationship: values.relationship
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase())
       });
       await fetchChildren();
       setCreateModalVisible(false);
@@ -203,17 +181,31 @@ const ChildScreen = () => {
     try {
       await api.put(`/children/${selectedChild._id}`, {
         ...values,
-        birthDate: format(values.birthDate, "yyyy-MM-dd"),
+        birthDate: new Date(new Date(values.birthDate).setHours(0, 0, 0, 0)),
+        relationship: values.relationship
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase())
       });
       await fetchChildren();
       setUpdateModalVisible(false);
       showSnackbar("Child updated successfully!", 5000, "Close");
     } catch (error) {
-      showSnackbar(
-        error.response?.data?.message || "Failed to update child. Please try again.",
-        5000,
-        "Close"
-      );
+      if (error.response) {
+        const { data } = error.response;
+        if (data.validationErrors && Array.isArray(data.validationErrors)) {
+          data.validationErrors.forEach((err) => {
+            showSnackbar(err.error || "Validation error occurred", 5000, "Close");
+          });
+        } else {
+          showSnackbar(
+            data.message || "Failed to update child. Please try again.",
+            5000,
+            "Close"
+          );
+        }
+      } else {
+        showSnackbar("Network error. Please try again.", 5000, "Close");
+      }
     } finally {
       setLoading(false);
     }
@@ -303,6 +295,10 @@ const ChildScreen = () => {
           />
           <Text style={{ color: theme.colors.primary }}>Loading...</Text>
         </View>
+      ) : !children || children.length === 0 ? (
+        <View style={styles(theme).noDataContainer}>
+          <Text style={styles(theme).noDataText}>No children found</Text>
+        </View>
       ) : (
         <FlatList
           data={children}
@@ -327,10 +323,9 @@ const ChildScreen = () => {
                 initialValues={{
                   name: "",
                   note: "",
-                  birthDate: new Date(),
+                  birthDate: new Date(new Date().setHours(0, 0, 0, 0)),
                   gender: GenderEnum.BOY,
                   feedingType: FeedingTypeEnum.N_A,
-                  allergies: [],
                   relationship: RelationshipEnum.PARENT,
                 }}
                 validationSchema={ChildSchema}
@@ -414,20 +409,6 @@ const ChildScreen = () => {
                       <Text style={styles(theme).errorText}>{errors.relationship}</Text>
                     )}
 
-                    <MultipleSelectList
-                      setSelected={(val) => setFieldValue("allergies", val)}
-                      data={allergyOptions}
-                      save="value"
-                      placeholder="Select Allergies"
-                      search={false}
-                      boxStyles={styles(theme).dropdownBox}
-                      dropdownStyles={styles(theme).dropdown}
-                      defaultOptions={allergyOptions.filter(opt => values.allergies.includes(opt.value))}
-                    />
-                    {touched.allergies && errors.allergies && (
-                      <Text style={styles(theme).errorText}>{errors.allergies}</Text>
-                    )}
-
                     <DatePickerInput
                       locale="en"
                       label="Birth Date"
@@ -484,7 +465,6 @@ const ChildScreen = () => {
                   birthDate: selectedChild?.birthDate ? parseISO(selectedChild.birthDate) : new Date(),
                   gender: selectedChild?.gender ?? GenderEnum.BOY,
                   feedingType: selectedChild?.feedingType || FeedingTypeEnum.N_A,
-                  allergies: selectedChild?.allergies || [],
                   relationship: selectedChild?.relationship || RelationshipEnum.PARENT,
                 }}
                 validationSchema={ChildSchema}
@@ -567,20 +547,6 @@ const ChildScreen = () => {
                     />
                     {touched.relationship && errors.relationship && (
                       <Text style={styles(theme).errorText}>{errors.relationship}</Text>
-                    )}
-
-                    <MultipleSelectList
-                      setSelected={(val) => setFieldValue("allergies", val)}
-                      data={allergyOptions}
-                      save="value"
-                      placeholder="Select Allergies"
-                      search={false}
-                      boxStyles={styles(theme).dropdownBox}
-                      dropdownStyles={styles(theme).dropdown}
-                      defaultOptions={allergyOptions.filter(opt => values.allergies.includes(opt.value))}
-                    />
-                    {touched.allergies && errors.allergies && (
-                      <Text style={styles(theme).errorText}>{errors.allergies}</Text>
                     )}
 
                     <DatePickerInput
@@ -681,6 +647,16 @@ const styles = (theme) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
+    },
+    noDataContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    noDataText: {
+      fontSize: 20,
+      color: theme.colors.text,
+      fontFamily: theme.fonts.medium.fontFamily,
     },
     childContainer: {
       backgroundColor: "white",

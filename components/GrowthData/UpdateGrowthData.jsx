@@ -40,7 +40,7 @@ const UpdateGrowthData = ({ visible, onClose, childId, growthData, fetchGrowthDa
       setLoading(true);
       const parsedValues = {
         ...values,
-        inputDate: values.inputDate.toISOString().split("T")[0],
+        inputDate: new Date(new Date(values.inputDate).setHours(0, 0, 0, 0)),
         height: parseFloat(values.height),
         weight: parseFloat(values.weight),
         headCircumference: values.headCircumference ? parseFloat(values.headCircumference) : undefined,
@@ -53,7 +53,6 @@ const UpdateGrowthData = ({ visible, onClose, childId, growthData, fetchGrowthDa
         onClose();
       }
     } catch (error) {
-      console.error("Failed to update growth data:", error);
       if (error.response && error.response.status === 400 && error.response.data.validationErrors) {
         const validationErrors = error.response.data.validationErrors;
         if (Array.isArray(validationErrors)) {

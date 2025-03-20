@@ -71,7 +71,6 @@ const MemberConsultationChat = () => {
 
       setMessages(processedMessages);
     } catch (error) {
-      console.error("Error fetching messages:", error);
       showSnackbar("Failed to load messages", 5000, "Close");
     } finally {
       setFetchLoading(false);
@@ -103,7 +102,6 @@ const MemberConsultationChat = () => {
       setMessages((prevMessages) => [...prevMessages, newMsg]);
       setNewMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
       showSnackbar("Failed to send message", 5000, "Close");
     } finally {
       setSendLoading(false);
