@@ -20,7 +20,7 @@ import { ProfileScreen } from "../screens/ProfileScreen";
 import MemberConsultationRequest from "../screens/ConsultationRequest/Member/MemberConsultationRequest";
 import MemberConsultationHistory from "../screens/ConsultationHistory/Member/MemberConsultationHistory";
 import MemberConsultationChat from "../screens/ConsultationHistory/Member/MemberConsultationChat";
-// import DoctorConsultationRequest from "../screens/ConsultationRequest/Doctor/DoctorConsultationRequest";
+import DoctorConsultationRequest from "../screens/ConsultationRequest/Doctor/DoctorConsultationRequest";
 import DoctorConsultationHistory from "../screens/ConsultationHistory/Doctor/DoctorConsultationHistory.jsx";
 import DoctorConsultationChat from "../screens/ConsultationHistory/Doctor/DoctorConsultationChat";
 
@@ -270,7 +270,7 @@ const Navigator = ({ isAuthenticated, loading, user }) => {
             <>
               <Tab.Screen
                 name="ConsultationRequest"
-                component={MemberConsultationRequest}
+                component={DoctorConsultationRequest}
                 options={{
                   headerShown: true,
                   tabBarLabel: "Request",

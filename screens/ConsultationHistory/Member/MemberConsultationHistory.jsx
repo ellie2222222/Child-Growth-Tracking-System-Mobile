@@ -204,8 +204,7 @@ const MemberConsultationHistory = () => {
         <Card.Content>
           <View style={styles(theme).cardHeader}>
             <Title style={styles(theme).doctorName}>
-              Doctor:
-              {doctor.name || "Unknown"}
+              Doctor: {doctor.name || "Unknown"}
             </Title>
             <Text style={[styles(theme).statusText, { color: statusColor }]}>
               {statusText}

@@ -2,12 +2,12 @@ import React from "react";
 import { TouchableOpacity, Text } from "react-native";
 import { useTheme } from "react-native-paper";
 
-const Button = ({ 
-  title, 
-  onPress, 
-  variant = "default", 
-  textVariant = "medium", 
-  style 
+const Button = ({
+  title,
+  onPress,
+  variant = "default",
+  textVariant = "medium",
+  style
 }) => {
   const theme = useTheme();
 
@@ -23,7 +23,7 @@ const Button = ({
           borderBottomWidth: isTextVariant ? 1 : 0,
           borderBottomColor: isTextVariant ? "black" : "transparent",
           backgroundColor: isTextVariant ? "transparent" : theme.colors.primary,
-          borderRadius: isTextVariant ? 0 : 6,
+          borderRadius: isTextVariant ? 0 : 50,
           paddingHorizontal: isTextVariant ? 0 : 16,
           alignItems: isTextVariant ? "flex-start" : "center",
         },

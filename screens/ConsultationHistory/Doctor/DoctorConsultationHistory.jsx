@@ -204,8 +204,7 @@ const DoctorConsultationHistory = () => {
                 <Card.Content>
                     <View style={styles(theme).cardHeader}>
                         <Title style={styles(theme).doctorName}>
-                            Parent:
-                            {member.name || "Unknown"}
+                            Parent: {member.name || "Unknown"}
                         </Title>
                         <Text style={[styles(theme).statusText, { color: statusColor }]}>
                             {statusText}
@@ -234,7 +233,7 @@ const DoctorConsultationHistory = () => {
 
                         <Text style={styles(theme).detailLabel}>Doctor:</Text>
                         <Text style={styles(theme).detailValue}>
-                            Dr. {doctor.name || "Unknown"}
+                            {doctor.name || "Unknown"}
                         </Text>
 
                         <Text style={styles(theme).detailLabel}>Submitted:</Text>
@@ -533,28 +532,29 @@ const DoctorConsultationHistory = () => {
                                             </View>
                                         )}
 
-                                    <View style={styles(theme).modalFooter}>
-                                        <Button
-                                            mode="outlined"
-                                            onPress={() => setModalVisible(false)}
-                                            style={styles(theme).cancelButton}
-                                            labelStyle={styles(theme).cancelButtonText}>
-                                            Cancel
-                                        </Button>
 
-                                        <Button
-                                            mode="contained"
-                                            onPress={() =>
-                                                handleStartConsultation(selectedConsultation._id)
-                                            }
-                                            style={styles(theme).startConsultationButton}
-                                            labelStyle={styles(theme).buttonText}>
-                                            Chat
-                                        </Button>
-                                    </View>
                                 </View>
                             )}
                     </ScrollView>
+                    <View style={styles(theme).modalFooter}>
+                        <Button
+                            mode="outlined"
+                            onPress={() => setModalVisible(false)}
+                            style={styles(theme).cancelButton}
+                            labelStyle={styles(theme).cancelButtonText}>
+                            Cancel
+                        </Button>
+
+                        <Button
+                            mode="contained"
+                            onPress={() =>
+                                handleStartConsultation(selectedConsultation._id)
+                            }
+                            style={styles(theme).startConsultationButton}
+                            labelStyle={styles(theme).buttonText}>
+                            Chat
+                        </Button>
+                    </View>
                 </Modal>
             </Portal>
         </ScrollView>

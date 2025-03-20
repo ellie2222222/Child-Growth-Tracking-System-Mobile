@@ -192,7 +192,7 @@ const HomeScreen = () => {
             borderRadius: 50,
             alignItems: "center",
           }}
-          onPress={() => {}}>
+          onPress={() => { }}>
           <Text
             style={{
               color: "white",
@@ -292,7 +292,7 @@ const HomeScreen = () => {
               navigation.navigate("BlogDetailed", { postId: post.id });
             }}>
             <Image
-              source={{ uri: post.thumbnail }}
+              source={bannerImage}
               style={styles.blogThumbnail}
             />
             <View style={styles.blogContent}>
@@ -356,7 +356,7 @@ const HomeScreen = () => {
                         ? theme.colors.primary
                         : "white",
                   }}
-                  onPress={() => {}}>
+                  onPress={() => { }}>
                   {plan.price === "699,000 VND" ? "Sign Up" : "Upgrade"}
                 </Button>
               </Card.Content>
@@ -433,7 +433,7 @@ const HomeScreen = () => {
           <Button
             mode="contained"
             style={{ backgroundColor: theme.colors.primary }}
-            onPress={() => {}}>
+            onPress={() => { }}>
             Sign Up
           </Button>
         </Card.Content>
