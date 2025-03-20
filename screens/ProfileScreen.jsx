@@ -30,47 +30,36 @@ export const ProfileScreen = () => {
         });
         const fetchedUser = userResponse.data.user;
 
-        const planResponse = await api.get(
-          `/membership-packages/${fetchedUser.subscription.currentPlan}`,
-          { withCredentials: true }
-        );
-        const fetchedPlan = planResponse.data.package;
+        let membershipDetails = null;
+        if (fetchedUser.role === 0) {
+          const planResponse = await api.get(
+            `/membership-packages/${fetchedUser.subscription.currentPlan}`,
+            { withCredentials: true }
+          );
+          const fetchedPlan = planResponse.data.package;
 
-        const formattedUserInfo = {
+          membershipDetails = {
+            name: fetchedPlan.name,
+            description: fetchedPlan.description,
+            price: `${fetchedPlan.price.value.toLocaleString()} ${fetchedPlan.price.unit}`,
+            duration: `${fetchedPlan.duration.value} ${fetchedPlan.duration.unit.toLowerCase()}${fetchedPlan.duration.value > 1 ? "s" : ""}`,
+            features: [
+              { label: "Post Limit", value: fetchedPlan.postLimit },
+              { label: "Update Child Data Limit", value: fetchedPlan.updateChildDataLimit.toLocaleString() },
+              { label: "Download Chart Limit", value: fetchedPlan.downloadChart },
+            ],
+          };
+        }
+
+        setUserInfo({
           name: fetchedUser.name,
           email: fetchedUser.email,
           phone: fetchedUser.phoneNumber,
+          role: fetchedUser.role,
           avatar: fetchedUser.avatar || "https://i.pravatar.cc/300",
-          subscriptionDetails: {
-            startDate: fetchedUser.subscription.startDate,
-            endDate: fetchedUser.subscription.endDate,
-          },
-          membership: {
-            name: fetchedPlan.name,
-            description: fetchedPlan.description,
-            price: `${fetchedPlan.price.value.toLocaleString()} ${
-              fetchedPlan.price.unit
-            }`,
-            duration: `${
-              fetchedPlan.duration.value
-            } ${fetchedPlan.duration.unit.toLowerCase()}${
-              fetchedPlan.duration.value > 1 ? "s" : ""
-            }`,
-            features: [
-              { label: "Post Limit", value: fetchedPlan.postLimit },
-              {
-                label: "Update Child Data Limit",
-                value: fetchedPlan.updateChildDataLimit.toLocaleString(),
-              },
-              {
-                label: "Download Chart Limit",
-                value: fetchedPlan.downloadChart,
-              },
-            ],
-          },
-        };
-
-        setUserInfo(formattedUserInfo);
+          subscriptionDetails: fetchedUser.subscription,
+          membership: membershipDetails,
+        });
       } catch (err) {
         setError("Failed to fetch user or plan information");
         console.error(err);
@@ -84,37 +73,27 @@ export const ProfileScreen = () => {
 
   const renderUserInfo = () => (
     <View style={styles.userInfoSection}>
-      <Avatar.Image
-        size={120}
-        source={{ uri: userInfo.avatar }}
-        style={styles.avatar}
-      />
+      <Avatar.Image size={120} source={{ uri: userInfo.avatar }} style={styles.avatar} />
       <Text variant="medium" style={styles.userName}>
-        {userInfo.name}
+        {userInfo.name}{" "}
+        <Text variant="medium" style={{ color: userInfo.role === 2 ? "#F25A49" : "#F25A49" }}>
+          ({userInfo.role === 2 ? "Doctor" : "Member"})
+        </Text>
       </Text>
-      <Text variant="medium" style={styles.userDetail}>
-        Email: {userInfo.email}
-      </Text>
-      <Text variant="medium" style={styles.userDetail}>
-        Phone: {userInfo.phone}
-      </Text>
+      <Text variant="medium" style={styles.userDetail}>Email: {userInfo.email}</Text>
+      <Text variant="medium" style={styles.userDetail}>Phone: {userInfo.phone}</Text>
     </View>
   );
 
   const renderMembershipInfo = () => (
     <Card style={styles.membershipCard}>
       <Card.Content>
-        <Title
-          text="Current Membership Plan"
-          style={[styles.sectionTitle, { color: theme.colors.primary }]}
-        />
+        <Title text="Current Membership Plan" style={[styles.sectionTitle, { color: theme.colors.primary }]} />
         <Divider style={styles.divider} />
         <Text variant="medium" style={styles.membershipName}>
           {userInfo.membership.name}
         </Text>
-        <Text style={styles.description}>
-          {userInfo.membership.description}
-        </Text>
+        <Text style={styles.description}>{userInfo.membership.description}</Text>
         <Text style={styles.priceDuration}>
           Price: {userInfo.membership.price} / {userInfo.membership.duration}
         </Text>
@@ -127,40 +106,26 @@ export const ProfileScreen = () => {
           </View>
         ))}
         <View style={styles.upgradeButton}>
-          <Text style={[styles.upgradeText, { color: theme.colors.primary }]}>
-            Upgrade Plan
-          </Text>
+          <Text style={[styles.upgradeText, { color: theme.colors.primary }]}>Upgrade Plan</Text>
           <Icon name="chevron-right" size={22} color={theme.colors.primary} />
         </View>
       </Card.Content>
     </Card>
   );
 
-  // Xử lý trạng thái loading và error
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
+    return <View style={styles.container}><Text style={styles.loadingText}>Loading...</Text></View>;
   }
 
   if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
+    return <View style={styles.container}><Text style={styles.errorText}>{error}</Text></View>;
   }
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        {/* User Information Section */}
         {renderUserInfo()}
-
-        {/* Membership Information Section */}
-        {renderMembershipInfo()}
+        {userInfo.role === 0 && renderMembershipInfo()}
       </ScrollView>
     </View>
   );

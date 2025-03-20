@@ -20,6 +20,10 @@ import { ProfileScreen } from "../screens/ProfileScreen";
 import MemberConsultationRequest from "../screens/ConsultationRequest/Member/MemberConsultationRequest";
 import MemberConsultationHistory from "../screens/ConsultationHistory/Member/MemberConsultationHistory";
 import MemberConsultationChat from "../screens/ConsultationHistory/Member/MemberConsultationChat";
+// import DoctorConsultationRequest from "../screens/ConsultationRequest/Doctor/DoctorConsultationRequest";
+import DoctorConsultationHistory from "../screens/ConsultationHistory/Doctor/DoctorConsultationHistory.jsx";
+import DoctorConsultationChat from "../screens/ConsultationHistory/Doctor/DoctorConsultationChat";
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -88,7 +92,6 @@ const getTabIcon = (route, focused, color, size) => {
           color={color}
         />
       );
-
     case "Login":
       return <Ionicons name="log-in-outline" size={size} color={color} />;
     case "Signup":
@@ -150,7 +153,8 @@ const SettingsStack = () => {
   return (
     <Stack.Navigator
       initialRouteName="NestedSettings"
-      screenOptions={getHeaderStyles(theme)}>
+      screenOptions={getHeaderStyles(theme)}
+    >
       <Stack.Screen
         name="NestedSettings"
         component={SettingsScreen}
@@ -166,7 +170,8 @@ const MemberConsultationStacks = () => {
   return (
     <Stack.Navigator
       initialRouteName="NestedConsultationHistory"
-      screenOptions={getHeaderStyles(theme)}>
+      screenOptions={getHeaderStyles(theme)}
+    >
       <Stack.Screen
         name="NestedConsultationHistory"
         component={MemberConsultationHistory}
@@ -175,6 +180,27 @@ const MemberConsultationStacks = () => {
       <Stack.Screen
         name="MemberConsultationChat"
         component={MemberConsultationChat}
+        options={{ headerTitle: "Consultation Chat" }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const DoctorConsultationStacks = () => {
+  const theme = useTheme();
+  return (
+    <Stack.Navigator
+      initialRouteName="NestedConsultationHistory"
+      screenOptions={getHeaderStyles(theme)}
+    >
+      <Stack.Screen
+        name="NestedConsultationHistory"
+        component={DoctorConsultationHistory}
+        options={{ headerTitle: "Consultation History" }}
+      />
+      <Stack.Screen
+        name="MemberConsultationChat"
+        component={DoctorConsultationChat}
         options={{ headerTitle: "Consultation Chat" }}
       />
     </Stack.Navigator>
@@ -200,54 +226,76 @@ const Navigator = ({ isAuthenticated, loading, user }) => {
             getTabIcon(route, focused, color, size),
           ...getTabBarStyles(theme),
           ...getHeaderStyles(theme),
-        })}>
+        })}
+      >
         <Tab.Screen
           name="Home"
           component={HomeStack}
           options={{ headerShown: false }}
         />
         {isAuthenticated ? (
-          <>
-            <Tab.Screen
-              name="Child"
-              component={ChildStack}
-              options={{ headerShown: false }}
-            />
-            <Tab.Screen
-              name="ConsultationRequest"
-              component={MemberConsultationRequest}
-              options={{
-                headerShown: true,
-                tabBarLabel: "Request",
-                title: "Consultation Request",
-              }}
-            />
-            <Tab.Screen
-              name="ConsultationHistory"
-              component={MemberConsultationStacks}
-              options={{
-                headerShown: false,
-                tabBarLabel: "History",
-              }}
-            />
-            <Tab.Screen
-              name="Settings"
-              component={SettingsStack}
-              options={{ headerShown: false }}
-            />
-          </>
+          user?.role === 0 ? (
+            // Member tabs (includes Child)
+            <>
+              <Tab.Screen
+                name="Child"
+                component={ChildStack}
+                options={{ headerShown: false }}
+              />
+              <Tab.Screen
+                name="ConsultationRequest"
+                component={MemberConsultationRequest}
+                options={{
+                  headerShown: true,
+                  tabBarLabel: "Request",
+                  title: "Consultation Request",
+                }}
+              />
+              <Tab.Screen
+                name="ConsultationHistory"
+                component={MemberConsultationStacks}
+                options={{
+                  headerShown: false,
+                  tabBarLabel: "History",
+                }}
+              />
+              <Tab.Screen
+                name="Settings"
+                component={SettingsStack}
+                options={{ headerShown: false }}
+              />
+            </>
+          ) : user?.role === 2 ? (
+            // Doctor tabs (excludes Child)
+            <>
+              <Tab.Screen
+                name="ConsultationRequest"
+                component={MemberConsultationRequest}
+                options={{
+                  headerShown: true,
+                  tabBarLabel: "Request",
+                  title: "Consultation Request",
+                }}
+              />
+              <Tab.Screen
+                name="ConsultationHistory"
+                component={DoctorConsultationStacks}
+                options={{
+                  headerShown: false,
+                  tabBarLabel: "History",
+                }}
+              />
+              <Tab.Screen
+                name="Settings"
+                component={SettingsStack}
+                options={{ headerShown: false }}
+              />
+            </>
+          ) : null
         ) : (
           <>
-            <Tab.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Tab.Screen
-              name="Signup"
-              component={SignupScreen}
-              options={{ headerShown: false }}
-            />
+            <Tab.Screen name="Login" component={LoginScreen} />
+            <Tab.Screen name="Signup" component={SignupScreen} />
           </>
         )}
       </Tab.Navigator>
