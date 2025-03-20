@@ -6,7 +6,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
 import HomeScreen from "../screens/HomeScreen";
 import SettingsScreen from "../screens/SettingsScreen";
@@ -18,6 +17,9 @@ import BlogsScreen from "../screens/Blog/BlogsScreen";
 import { BlogDetailedScreen } from "../screens/Blog/BlogDetailedScreen";
 import { FAQsScreen } from "../screens/FAQ/FAQsScreen";
 import { ProfileScreen } from "../screens/ProfileScreen";
+import MemberConsultationRequest from "../screens/ConsultationRequest/Member/MemberConsultationRequest";
+import MemberConsultationHistory from "../screens/ConsultationHistory/Member/MemberConsultationHistory";
+import MemberConsultationChat from "../screens/ConsultationHistory/Member/MemberConsultationChat";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -47,11 +49,46 @@ const getTabBarStyles = (theme) => ({
 const getTabIcon = (route, focused, color, size) => {
   switch (route.name) {
     case "Home":
-      return <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />;
+      return (
+        <Ionicons
+          name={focused ? "home" : "home-outline"}
+          size={size}
+          color={color}
+        />
+      );
     case "Child":
-      return <MaterialCommunityIcons name={focused ? "baby-face" : "baby-face-outline"} size={size} color={color} />;
+      return (
+        <MaterialCommunityIcons
+          name={focused ? "baby-face" : "baby-face-outline"}
+          size={size}
+          color={color}
+        />
+      );
     case "Settings":
-      return <FontAwesome6 name="gear" size={size} color={color} />;
+      return (
+        <Ionicons
+          name={focused ? "settings" : "settings-outline"}
+          size={size}
+          color={color}
+        />
+      );
+    case "ConsultationRequest":
+      return (
+        <Ionicons
+          name={focused ? "calendar" : "calendar-outline"}
+          size={size}
+          color={color}
+        />
+      );
+    case "ConsultationHistory":
+      return (
+        <Ionicons
+          name={focused ? "albums" : "albums-outline"}
+          size={size}
+          color={color}
+        />
+      );
+
     case "Login":
       return <Ionicons name="log-in-outline" size={size} color={color} />;
     case "Signup":
@@ -66,8 +103,16 @@ const ChildStack = () => {
   const theme = useTheme();
   return (
     <Stack.Navigator screenOptions={getHeaderStyles(theme)}>
-      <Stack.Screen name="ChildTab" component={ChildScreen} options={{ title: "Child" }} />
-      <Stack.Screen name="ChildDetails" component={ChildDetailsScreen} options={{ title: "Child Details" }} />
+      <Stack.Screen
+        name="ChildTab"
+        component={ChildScreen}
+        options={{ title: "Child" }}
+      />
+      <Stack.Screen
+        name="ChildDetails"
+        component={ChildDetailsScreen}
+        options={{ title: "Child Details" }}
+      />
     </Stack.Navigator>
   );
 };
@@ -76,14 +121,26 @@ const HomeStack = () => {
   const theme = useTheme();
   return (
     <Stack.Navigator>
-      <Stack.Screen name="HomeTab" component={HomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Blogs" component={BlogsScreen} options={getHeaderStyles(theme)} />
+      <Stack.Screen
+        name="HomeTab"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Blogs"
+        component={BlogsScreen}
+        options={getHeaderStyles(theme)}
+      />
       <Stack.Screen
         name="BlogDetailed"
         component={BlogDetailedScreen}
         options={{ ...getHeaderStyles(theme), headerTitle: "" }}
       />
-      <Stack.Screen name="FAQs" component={FAQsScreen} options={getHeaderStyles(theme)} />
+      <Stack.Screen
+        name="FAQs"
+        component={FAQsScreen}
+        options={getHeaderStyles(theme)}
+      />
     </Stack.Navigator>
   );
 };
@@ -91,18 +148,42 @@ const HomeStack = () => {
 const SettingsStack = () => {
   const theme = useTheme();
   return (
-    <Stack.Navigator initialRouteName="NestedSettings" screenOptions={getHeaderStyles(theme)}>
-      <Stack.Screen name="NestedSettings" component={SettingsScreen} options={{ headerTitle: "Settings" }} />
+    <Stack.Navigator
+      initialRouteName="NestedSettings"
+      screenOptions={getHeaderStyles(theme)}>
+      <Stack.Screen
+        name="NestedSettings"
+        component={SettingsScreen}
+        options={{ headerTitle: "Settings" }}
+      />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 };
 
-// Main Navigator
-const Navigator = ({ isAuthenticated, loading }) => {
+const MemberConsultationStacks = () => {
+  const theme = useTheme();
+  return (
+    <Stack.Navigator
+      initialRouteName="NestedConsultationHistory"
+      screenOptions={getHeaderStyles(theme)}>
+      <Stack.Screen
+        name="NestedConsultationHistory"
+        component={MemberConsultationHistory}
+        options={{ headerTitle: "Consultation History" }}
+      />
+      <Stack.Screen
+        name="MemberConsultationChat"
+        component={MemberConsultationChat}
+        options={{ headerTitle: "Consultation Chat" }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const Navigator = ({ isAuthenticated, loading, user }) => {
   const theme = useTheme();
 
-  // Loading state
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -115,15 +196,40 @@ const Navigator = ({ isAuthenticated, loading }) => {
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => getTabIcon(route, focused, color, size),
+          tabBarIcon: ({ focused, color, size }) =>
+            getTabIcon(route, focused, color, size),
           ...getTabBarStyles(theme),
           ...getHeaderStyles(theme),
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false }} />
+        })}>
+        <Tab.Screen
+          name="Home"
+          component={HomeStack}
+          options={{ headerShown: false }}
+        />
         {isAuthenticated ? (
           <>
-            <Tab.Screen name="Child" component={ChildStack} options={{ headerShown: false }} />
+            <Tab.Screen
+              name="Child"
+              component={ChildStack}
+              options={{ headerShown: false }}
+            />
+            <Tab.Screen
+              name="ConsultationRequest"
+              component={MemberConsultationRequest}
+              options={{
+                headerShown: true,
+                tabBarLabel: "Request",
+                title: "Consultation Request",
+              }}
+            />
+            <Tab.Screen
+              name="ConsultationHistory"
+              component={MemberConsultationStacks}
+              options={{
+                headerShown: false,
+                tabBarLabel: "History",
+              }}
+            />
             <Tab.Screen
               name="Settings"
               component={SettingsStack}
@@ -132,8 +238,16 @@ const Navigator = ({ isAuthenticated, loading }) => {
           </>
         ) : (
           <>
-            <Tab.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Tab.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+            <Tab.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Tab.Screen
+              name="Signup"
+              component={SignupScreen}
+              options={{ headerShown: false }}
+            />
           </>
         )}
       </Tab.Navigator>
